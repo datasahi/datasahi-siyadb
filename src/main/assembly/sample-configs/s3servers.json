@@ -1,0 +1,9 @@
+{
+  "datastores": [
+    {
+      "id": "s3-first",
+      "type": "S3",
+      "name": "S3 First"
+    }
+  ]
+}

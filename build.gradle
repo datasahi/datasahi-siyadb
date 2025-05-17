@@ -24,6 +24,11 @@ dependencies {
     implementation("org.sql2o:sql2o:1.6.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
 
+    implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.1000')
+    implementation platform('software.amazon.awssdk:bom:2.17.132')
+    implementation("com.amazonaws:aws-java-sdk-s3")
+    implementation("software.amazon.awssdk:sts")
+
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("org.yaml:snakeyaml")
 
