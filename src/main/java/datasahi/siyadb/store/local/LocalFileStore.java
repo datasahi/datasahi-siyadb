@@ -3,6 +3,7 @@ package datasahi.siyadb.store.local;
 import datasahi.siyadb.store.FileStore;
 import datasahi.siyadb.store.FileTransferRequest;
 import datasahi.siyadb.store.FileTransferResponse;
+import datasahi.siyadb.store.StoreConfig;
 
 public class LocalFileStore implements FileStore {
 
@@ -13,8 +14,8 @@ public class LocalFileStore implements FileStore {
     }
 
     @Override
-    public String getId() {
-        return config.getId();
+    public StoreConfig getConfig() {
+        return config;
     }
 
     @Override

@@ -14,7 +14,12 @@ public final class FileUtil {
 
     public JSONObject readJsonFile(String filePath) {
         try {
-            return new JSONObject(readFile(filePath));
+            String source = readFile(filePath);
+            if (source != null) {
+                System.out.println("Source :: " + source);
+                return new JSONObject(source);
+            }
+            return new JSONObject();
         } catch (Exception e) {
             throw new GenericException("Failed to create json from file: " + filePath, e, 10);
         }
@@ -22,7 +27,8 @@ public final class FileUtil {
 
     public String readFile(String filePath) {
         try {
-            if (new File(filePath).exists()) {
+            File file = new File(filePath);
+            if (file.exists() && !file.isDirectory()) {
                 return new String((Files.readAllBytes(Paths.get(filePath))));
             }
 
@@ -30,6 +36,7 @@ public final class FileUtil {
             if (is != null) {
                 String data = new String(is.readAllBytes());
                 is.close();
+                if ("FileUtil.class\n".equals(data)) return null;
                 return data;
             }
         } catch (IOException e) {

@@ -18,11 +18,16 @@ public class S3FileStore implements FileStore {
 
     public S3FileStore(S3Config s3Config) {
         this.s3Config = s3Config;
-        if (this.s3Config.getType() == S3Config.Type.ROLE_ARN) {
+        if (this.s3Config.getSecurityMode() == S3Config.SecurityMode.ROLE_ARN) {
             this.s3ClientManager = new S3ClientManagerWithRole(s3Config);
         } else {
             this.s3ClientManager = new S3ClientManagerWithKeys(s3Config);
         }
+    }
+
+    @Override
+    public StoreConfig getConfig() {
+        return s3Config;
     }
 
     //@Override

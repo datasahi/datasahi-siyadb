@@ -2,6 +2,7 @@ package datasahi.siyadb.common.db;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import datasahi.siyadb.query.QueryResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.sql2o.Connection;
 import org.sql2o.Query;
@@ -10,10 +11,7 @@ import org.sql2o.data.Column;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DatabaseService {
@@ -45,7 +43,7 @@ public class DatabaseService {
         hc.setMaximumPoolSize(config.getMaxPoolSize());
         if (config.getDriverClass().contains("duckdb")) {
             returnGeneratedKeys = false;
-            hc.addDataSourceProperty("duckdb.read_only", "true");
+            hc.addDataSourceProperty("duckdb.read_only", "false");
         } else if (config.getDriverClass().contains("sqlserver")) {
             returnGeneratedKeys = false;
         } else {
@@ -65,15 +63,15 @@ public class DatabaseService {
         return config;
     }
 
-    public String selectAsText(String sqlId, Map<String, Object> parameters, OutputFormat outputFormat) {
-        return selectAsText(sqlId, parameters, outputFormat, Collections.emptySet());
+    public QueryResponse selectAsText(String sql, Map<String, Object> parameters, OutputFormat outputFormat) {
+        return selectAsText(sql, parameters, outputFormat, Collections.emptySet());
     }
 
-    public String selectAsText(String sqlId, Map<String, Object> parameters, OutputFormat outputFormat,
+    public QueryResponse selectAsText(String sql, Map<String, Object> parameters, OutputFormat outputFormat,
                                Set<String> jsonColumns) {
 
         try (Connection con = sql2o.open()) {
-            Table records = getQuery(parameters, sqlId, con).executeAndFetchTable();
+            Table records = getQueryForSql(parameters, con, sql).executeAndFetchTable();
 
             if (outputFormat == OutputFormat.CSV) {
                 return prepareCsv(records);
@@ -83,7 +81,7 @@ public class DatabaseService {
         }
     }
 
-    private String prepareJson(Table records, Set<String> jsonColumns) {
+    private QueryResponse prepareJson(Table records, Set<String> jsonColumns) {
         StringBuilder sb = new StringBuilder();
         List<String> columnsText = records.columns().stream().map(Column::getName).collect(Collectors.toList());
 //        records.columns().stream().forEach(c -> System.out.println(c.getName() + " :: " + c.getType()));
@@ -95,7 +93,8 @@ public class DatabaseService {
         int columnCount = records.columns().size();
         sb.append('[');
         boolean firstRecord = true;
-        for (Row row : records.rows()) {
+        List<Row> rows = records.rows();
+        for (Row row : rows) {
             if (!firstRecord) {
                 sb.append(',');
             }
@@ -120,22 +119,23 @@ public class DatabaseService {
             firstRecord = false;
         }
         sb.append(']');
-        return sb.toString();
+        return new QueryResponse().setId(UUID.randomUUID().toString()).setCount(rows.size()).setRecords(sb.toString());
     }
 
-    private String prepareCsv(Table records) {
+    private QueryResponse prepareCsv(Table records) {
         StringBuilder sb = new StringBuilder();
         List<String> columnsText = records.columns().stream().map(Column::getName).collect(Collectors.toList());
         sb.append(StringUtils.join(columnsText, '|')).append('\n');
         int columnCount = records.columns().size();
-        for (Row row : records.rows()) {
+        List<Row> rows = records.rows();
+        for (Row row : rows) {
             Object[] values = new Object[columnCount];
             for (int i = 0; i < columnCount; i++) {
                 values[i] = row.getObject(i);
             }
             sb.append(StringUtils.join(values, '|')).append('\n');
         }
-        return sb.toString();
+        return new QueryResponse().setId(UUID.randomUUID().toString()).setCount(rows.size()).setRecords(sb.toString());
     }
 
     public <T> List<T> select(String sqlId, Map<String, Object> parameters, Class<T> recordType) {
@@ -230,6 +230,10 @@ public class DatabaseService {
 
 //        System.out.println("sqlId ::" + sqlId);
         String sql = sqlRepository.getSql(sqlId);
+        return getQueryForSql(parameters, con, sql);
+    }
+
+    private Query getQueryForSql(Map<String, Object> parameters, Connection con, String sql) {
         Query query = con.createQuery(sql, returnGeneratedKeys);
         for (String key : parameters.keySet()) {
             try {

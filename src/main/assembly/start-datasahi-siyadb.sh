@@ -11,7 +11,7 @@ mkdir -p "$LOGS_DIR"
 
 # Set Java memory and GC logging options
 export JAVA_OPTS="-Xms512m -Xmx2048m \
--Xlog:gc*=info:file=$LOGS_DIR/datasahi-flow.gc.log:time,uptime,level,tags:filecount=5,filesize=100m \
+-Xlog:gc*=info:file=$LOGS_DIR/datasahi-siyadb.gc.log:time,uptime,level,tags:filecount=5,filesize=100m \
 -XX:+HeapDumpOnOutOfMemoryError \
 -XX:HeapDumpPath=$LOGS_DIR"
 
@@ -40,40 +40,37 @@ check_java_version() {
 
 # Function to start the server
 start_server() {
-    local jar_file="datasahi-flow-0.1.0-all.jar"
-    local log_file="$LOGS_DIR/datasahi-flow.log"
+    local jar_file="datasahi-siyadb-0.1.0-all.jar"
+    local log_file="$LOGS_DIR/datasahi-siyadb.log"
 
     if [ ! -f "$jar_file" ]; then
         echo "Error: $jar_file not found in current directory"
         exit 1
     fi
 
-    echo "Starting Datasahi Flow server..."
+    echo "Starting Datasahi Siyadb server..."
     echo "Using JAVA_OPTS: $JAVA_OPTS"
     echo "Port: $DATASAHI_PORT"
     echo "Config Paths: $DATASAHI_CONFIG_PATHS"
     echo "Work Directory: $DATASAHI_WORK_DIR"
     echo "Log file: $log_file"
-    echo "GC log file: $LOGS_DIR/datasahi-flow.gc.log"
+    echo "GC log file: $LOGS_DIR/datasahi-siyadb.gc.log"
 
     # Start the server and redirect output to log file
     java $JAVA_OPTS -jar "$jar_file" > "$log_file" 2>&1 &
 
     # Save the PID
-    echo $! > "$DATASAHI_WORK_DIR/datasahi-flow.pid"
+    echo $! > "$DATASAHI_WORK_DIR/datasahi-siyadb.pid"
 
-    echo "Server started with PID $(cat "$DATASAHI_WORK_DIR/datasahi-flow.pid")"
+    echo "Server started with PID $(cat "$DATASAHI_WORK_DIR/datasahi-siyadb.pid")"
     echo "Log file: $log_file"
     echo "To follow logs: tail -f $log_file"
     echo "Health endpoint: http://localhost:$DATASAHI_PORT/health"
-    echo "Health check to see all servers are reachable: http://localhost:$DATASAHI_PORT/health/check"
-    echo "Verify a sample sync run: http://localhost:$DATASAHI_PORT/sync/verify/<flow.id>/100/30 - to sync maximum of 100 records or run for 30 seconds maximum"
-    echo "Start sync: http://localhost:$DATASAHI_PORT/sync/start"
-    echo "Stop sync: http://localhost:$DATASAHI_PORT/sync/stop"
+    echo "Health check to see all datastores are setup: http://localhost:$DATASAHI_PORT/health/check"
 }
 
 # Main execution
-echo "Initializing Datasahi Flow..."
+echo "Initializing Datasahi Siyadb..."
 
 # Check Java version
 check_java_version

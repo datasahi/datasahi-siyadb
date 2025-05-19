@@ -1,0 +1,19 @@
+curl -X POST 'http://localhost:8089/siyadb/query/execute' \
+-H 'Content-Type: application/json' \
+-d '{
+  "datasource": "s3csp",
+  "bucket": "cspdata",
+  "filepath": "holdings.csv",
+  "filetype": "csv",
+  "query": "SELECT * FROM s3csp_cspdata_holdings_csv LIMIT 5"
+}'
+
+curl -X POST 'http://localhost:8089/siyadb/query/execute' \
+-H 'Content-Type: application/json' \
+-d '{
+  "datasource": "s3csp",
+  "bucket": "cspdata",
+  "filepath": "20240903.CSV",
+  "filetype": "csv",
+  "query": "SELECT * FROM s3csp_cspdata_20240903_CSV LIMIT 5"
+}'

@@ -1,6 +1,7 @@
 package datasahi.siyadb.store;
 
 import com.google.gson.Gson;
+import datasahi.siyadb.config.ConfigService;
 import datasahi.siyadb.config.ServerConfiguration;
 import datasahi.siyadb.store.local.LocalFileStore;
 import datasahi.siyadb.store.local.LocalStoreConfig;
@@ -19,13 +20,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Context
 public class StoreRegistry {
 
+    private final ConfigService configService;
     private final ServerConfiguration serverConfiguration;
 
     private Map<String, FileStore> fileStores = new ConcurrentHashMap<>();
     private final Gson gson = new Gson();
 
 
-    public StoreRegistry(ServerConfiguration serverConfiguration) {
+    public StoreRegistry(ConfigService configService, ServerConfiguration serverConfiguration) {
+        this.configService = configService;
         this.serverConfiguration = serverConfiguration;
     }
 
@@ -35,26 +38,25 @@ public class StoreRegistry {
     }
 
     public void register(FileStore store) {
-        fileStores.put(store.getId(), store);
+        fileStores.put(store.getConfig().getId(), store);
     }
 
     public void register(JSONObject dsJson) {
 
         String type = dsJson.getString("type");
-        FileStore fileStore = null;
         switch (FileStoreType.valueOf(type)) {
             case S3:
                 S3Config s3Config = gson.fromJson(dsJson.toString(), S3Config.class);
-                fileStore = new S3FileStore(s3Config);
+                s3Config.setWorkFolder(configService.getWorkDir() + "/" + s3Config.getId());
+                register(new S3FileStore(s3Config));
                 break;
             case LOCAL:
                 LocalStoreConfig config = gson.fromJson(dsJson.toString(), LocalStoreConfig.class);
-                fileStore = new LocalFileStore(config);
+                register(new LocalFileStore(config));
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported filestore type: " + type);
         }
-        register(fileStore);
     }
 
     public FileStore get(String id) {
@@ -64,5 +66,4 @@ public class StoreRegistry {
     public List<FileStore> getFileStores() {
         return List.copyOf(fileStores.values());
     }
-
 }

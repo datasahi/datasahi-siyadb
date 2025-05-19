@@ -2,7 +2,7 @@ package datasahi.siyadb.store;
 
 public interface FileStore {
 
-    String getId();
+    StoreConfig getConfig();
 
     FileTransferResponse download(FileTransferRequest request);
 

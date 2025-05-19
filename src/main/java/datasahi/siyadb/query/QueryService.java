@@ -2,10 +2,14 @@ package datasahi.siyadb.query;
 
 import datasahi.siyadb.common.api.ServiceResponse;
 import datasahi.siyadb.common.db.DatabaseService;
+import datasahi.siyadb.common.db.OutputFormat;
 import datasahi.siyadb.duckdb.DuckdbService;
 import datasahi.siyadb.load.DataLoadService;
-import datasahi.siyadb.load.FileKey;
 import jakarta.inject.Singleton;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.Collections;
 
 @Singleton
 public class QueryService {
@@ -18,10 +22,17 @@ public class QueryService {
         this.dataLoadService = dataLoadService;
     }
 
-    public ServiceResponse<QueryResponse> execute(QueryRequest request) {
+    public ServiceResponse<JSONObject> execute(QueryRequest request) {
+        long start = System.currentTimeMillis();
         dataLoadService.checkAndLoadFile(request.getFileKey());
-        QueryResponse response = this.databaseService.selectAsText(request.getQuery());
-        ServiceResponse<QueryResponse> serviceResponse = new ServiceResponse<>().setData(response);
+        QueryResponse response = databaseService.selectAsText(request.getQuery(), Collections.emptyMap(), OutputFormat.JSON);
+        JSONObject json = new JSONObject();
+        json.put("id", response.getId());
+        json.put("count", response.getCount());
+        json.put("records", new JSONArray(response.getRecords()));
+        long millis = System.currentTimeMillis() - start;
+        ServiceResponse<JSONObject> serviceResponse =
+                new ServiceResponse<>().setData(json).setSuccess(true).setMillis(millis);
         return serviceResponse;
     }
 }

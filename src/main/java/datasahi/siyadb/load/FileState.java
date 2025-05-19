@@ -6,6 +6,7 @@ public class FileState {
 
     private final FileKey fileKey;
     private String localPath;
+    private String tableName;
     private long lastAccessMillis;
     private volatile boolean loaded;
 
@@ -41,6 +42,15 @@ public class FileState {
 
     public FileState setLoaded(boolean loaded) {
         this.loaded = loaded;
+        return this;
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public FileState setTableName(String tableName) {
+        this.tableName = tableName;
         return this;
     }
 

@@ -1,18 +1,10 @@
 package datasahi.siyadb.store.local;
 
-public class LocalStoreConfig {
+import datasahi.siyadb.store.StoreConfig;
 
-    private String id;
+public class LocalStoreConfig extends StoreConfig {
+
     private String folder;
-
-    public String getId() {
-        return id;
-    }
-
-    public LocalStoreConfig setId(String id) {
-        this.id = id;
-        return this;
-    }
 
     public String getFolder() {
         return folder;
@@ -26,8 +18,8 @@ public class LocalStoreConfig {
     @Override
     public String toString() {
         return "LocalStoreConfig{" +
-                "id='" + id + '\'' +
-                ", folder='" + folder + '\'' +
+                super.toString() +
+                "folder='" + folder + '\'' +
                 '}';
     }
 }

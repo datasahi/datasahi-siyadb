@@ -5,7 +5,7 @@ export DATASAHI_WORK_DIR=${DATASAHI_WORK_DIR:-"work"}
 export DATASAHI_PORT=${DATASAHI_PORT:-8080}
 
 # PID file location
-PID_FILE="$DATASAHI_WORK_DIR/datasahi-flow.pid"
+PID_FILE="$DATASAHI_WORK_DIR/datasahi-siyadb.pid"
 
 # Function to check if process is running
 check_process() {
@@ -146,6 +146,6 @@ shutdown_server() {
 }
 
 # Main execution
-echo "Initiating Datasahi Flow shutdown..."
+echo "Initiating Datasahi Siyadb shutdown..."
 echo "Using port: $DATASAHI_PORT"
 shutdown_server

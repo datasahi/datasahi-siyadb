@@ -1,7 +1,10 @@
 package datasahi.siyadb.load;
 
+import io.micronaut.serde.annotation.Serdeable;
+
 import java.util.Objects;
 
+@Serdeable.Serializable
 public class FileKey {
 
     private final String datastore;
@@ -24,6 +27,15 @@ public class FileKey {
 
     public String getFilepath() {
         return filepath;
+    }
+
+    public String getSourcePath() {
+        return bucket + "/" + filepath;
+    }
+
+    public String getTableName() {
+        String tableName = datastore + "_" + bucket + "_" + filepath;
+        return tableName.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
     @Override

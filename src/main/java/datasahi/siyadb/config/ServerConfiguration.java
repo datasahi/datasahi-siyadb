@@ -35,10 +35,11 @@ public class ServerConfiguration {
 
     private void loadConfig(String path) {
         JSONObject jo = new FileUtil().readJsonFile(path);
-        addJsonObjects(jo, stores, "dataservers");
+        addJsonObjects(jo, stores, "datastores");
     }
 
     private void addJsonObjects(JSONObject jo, List<JSONObject> list, String key) {
+        if (!jo.has(key)) return;
         JSONArray dsa = jo.getJSONArray(key);
         for (int i = 0; i < dsa.length(); i++) {
             list.add(dsa.getJSONObject(i));

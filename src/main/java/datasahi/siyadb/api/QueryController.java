@@ -24,5 +24,4 @@ public class QueryController {
     public String executeQuery(HttpRequest<?> request, @Body QueryRequest queryRequest) {
         return queryService.execute(queryRequest).toJsonString();
     }
-
 }

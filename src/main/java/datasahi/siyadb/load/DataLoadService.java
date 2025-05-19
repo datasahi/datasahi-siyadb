@@ -46,23 +46,28 @@ public class DataLoadService {
 
         synchronized (fileState.getFileKey()) {
             if (fileState.isLoaded()) return true;
-            loadFile(fileKey);
-            fileState.setLastAccessMillis(System.currentTimeMillis());
-            fileState.setLoaded(true);
+            String tableName = loadFile(fileKey);
+            fileState.setTableName(tableName).setLastAccessMillis(System.currentTimeMillis()).setLoaded(true);
         }
 
         return true;
     }
 
-    private void loadFile(FileKey fileKey) {
+    private String loadFile(FileKey fileKey) {
 
-        String sourcePath = fileKey.getBucket() + "/" + fileKey.getFilepath();
+        String sourcePath = fileKey.getSourcePath();
         String targetPath = configService.getWorkDir() + "/" + sourcePath;
         FileTransferRequest request = new FileTransferRequest().setSourcePath(sourcePath)
                 .setTargetPath(targetPath);
         FileTransferResponse response = storeRegistry.get(fileKey.getDatastore()).download(request);
         if (response.isExists()) {
-            // todo load the file into duckdb
+            String tableName = fileKey.getTableName();
+            String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " AS SELECT * FROM read_csv_auto('" +
+                    targetPath + "', HEADER = true);";
+            databaseService.executeUpdateSql(sql);
+            databaseService.executeUpdateSql("ANALYZE " + tableName);
+            return tableName;
+            //todo create indexes
         } else {
             throw new RuntimeException("Unable to load file from :: " + sourcePath);
         }

@@ -1,7 +1,10 @@
 package datasahi.siyadb.query;
 
 import datasahi.siyadb.load.FileKey;
+import io.micronaut.serde.annotation.Serdeable;
 
+@Serdeable.Serializable
+@Serdeable.Deserializable
 public class QueryRequest {
 
     private String datasource;

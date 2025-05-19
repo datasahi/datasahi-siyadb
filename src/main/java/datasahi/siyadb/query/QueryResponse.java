@@ -1,5 +1,8 @@
 package datasahi.siyadb.query;
 
+import io.micronaut.serde.annotation.Serdeable;
+
+@Serdeable
 public class QueryResponse {
 
     private String id;

@@ -1,8 +1,10 @@
 package datasahi.siyadb.store.s3;
 
-public class S3Config {
+import datasahi.siyadb.store.StoreConfig;
 
-    public enum Type {
+public class S3Config extends StoreConfig {
+
+    public enum SecurityMode {
         ROLE_ARN,
         ACCESS_KEY
     }
@@ -20,19 +22,19 @@ public class S3Config {
     private String folder;
     private String workFolder;
 
-    private Type type;
+    private SecurityMode securityMode;
     private int refreshClientInSeconds = 10 * 60; // 10 minutes default
 
     private boolean enabled = true;
 
     public static S3Config forRoleArn(String roleArn, String region) {
 
-        return new S3Config().setType(Type.ROLE_ARN).setRoleArn(roleArn).setRegion(region);
+        return new S3Config().setSecurityMode(SecurityMode.ROLE_ARN).setRoleArn(roleArn).setRegion(region);
     }
 
     public static S3Config forAccessKeys(String accessKey, String secretKey, String region) {
 
-        return new S3Config().setType(Type.ACCESS_KEY).setAccessKey(accessKey).setSecretKey(secretKey).setRegion(region);
+        return new S3Config().setSecurityMode(SecurityMode.ACCESS_KEY).setAccessKey(accessKey).setSecretKey(secretKey).setRegion(region);
     }
 
     public String getRoleArn() {
@@ -71,12 +73,12 @@ public class S3Config {
         return this;
     }
 
-    public Type getType() {
-        return type;
+    public SecurityMode getSecurityMode() {
+        return securityMode;
     }
 
-    public S3Config setType(Type type) {
-        this.type = type;
+    public S3Config setSecurityMode(SecurityMode securityMode) {
+        this.securityMode = securityMode;
         return this;
     }
 
@@ -110,14 +112,6 @@ public class S3Config {
         this.folder = folder;
     }
 
-    public String getWorkFolder() {
-        return workFolder;
-    }
-
-    public void setWorkFolder(String workFolder) {
-        this.workFolder = workFolder;
-    }
-
     public void setBucket(String bucket) {
         this.bucket = bucket;
     }
@@ -141,7 +135,7 @@ public class S3Config {
     }
 
     public boolean isArn() {
-        return (type == Type.ROLE_ARN);
+        return (securityMode == SecurityMode.ROLE_ARN);
     }
 
     public boolean isHttps() {
@@ -162,10 +156,22 @@ public class S3Config {
         return this;
     }
 
+    public String getWorkFolder() {
+        return workFolder;
+    }
+
+    public S3Config setWorkFolder(String workFolder) {
+        this.workFolder = workFolder;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "S3Config{" +
+                super.toString() +
                 "roleArn='" + roleArn + '\'' +
+                ", accessKey='" + accessKey + '\'' +
+                ", secretKey='" + secretKey + '\'' +
                 ", region='" + region + '\'' +
                 ", endpointUrl='" + endpointUrl + '\'' +
                 ", signPayload=" + signPayload +
@@ -173,8 +179,7 @@ public class S3Config {
                 ", pathStyleAccess=" + pathStyleAccess +
                 ", bucket='" + bucket + '\'' +
                 ", folder='" + folder + '\'' +
-                ", workFolder='" + workFolder + '\'' +
-                ", type=" + type +
+                ", securityMode=" + securityMode +
                 ", refreshClientInSeconds=" + refreshClientInSeconds +
                 ", enabled=" + enabled +
                 '}';
