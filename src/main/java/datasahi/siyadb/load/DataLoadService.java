@@ -7,12 +7,19 @@ import datasahi.siyadb.store.FileTransferRequest;
 import datasahi.siyadb.store.FileTransferResponse;
 import datasahi.siyadb.store.StoreRegistry;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 public class DataLoadService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataLoadService.class);
 
     private final DatabaseService databaseService;
     private final StoreRegistry storeRegistry;
@@ -27,7 +34,7 @@ public class DataLoadService {
         this.configService = configService;
     }
 
-    public boolean checkAndLoadFile(FileKey fileKey) {
+    public boolean checkAndLoad(FileKey fileKey) {
 
         FileState fileState = fileStates.get(fileKey);
         if (fileState == null) {
@@ -37,6 +44,7 @@ public class DataLoadService {
                     return true; // Another thread already loaded the file
                 }
                 fileState = new FileState(fileKey);
+                fileState.setCachedMillis(storeRegistry.get(fileKey.getDatastore()).getConfig().getCachedMinutes() * 60 * 1000);
                 fileStates.put(fileKey, fileState);
             }
         }
@@ -46,14 +54,14 @@ public class DataLoadService {
 
         synchronized (fileState.getFileKey()) {
             if (fileState.isLoaded()) return true;
-            String tableName = loadFile(fileKey);
+            String tableName = load(fileKey);
             fileState.setTableName(tableName).setLastAccessMillis(System.currentTimeMillis()).setLoaded(true);
         }
 
         return true;
     }
 
-    private String loadFile(FileKey fileKey) {
+    private String load(FileKey fileKey) {
 
         String sourcePath = fileKey.getSourcePath();
         String targetPath = configService.getWorkDir() + "/" + sourcePath;
@@ -71,5 +79,41 @@ public class DataLoadService {
         } else {
             throw new RuntimeException("Unable to load file from :: " + sourcePath);
         }
+    }
+
+    public void cleanup() {
+        for (FileState fs : fileStates.values()) {
+            if (fs.isExpired()) {
+                unload(fs.getFileKey());
+            }
+        }
+    }
+
+    public void unload(FileKey fileKey) {
+
+        FileState fileState = fileStates.get(fileKey);
+        if (fileState == null) return;
+        if (!fileState.isLoaded()) return;
+
+        LOGGER.info("Unloading file: {}", fileState);
+
+        synchronized (this) {
+            fileStates.remove(fileKey);
+        }
+
+        synchronized (fileState.getFileKey()) {
+            String tableName = fileState.getTableName();
+            databaseService.executeUpdateSql("DROP TABLE IF EXISTS " + tableName);
+            try {
+                Files.deleteIfExists(java.nio.file.Paths.get(fileState.getLocalPath()));
+            } catch (IOException e) {
+                // Nothing to do
+                LOGGER.warn("Failed to delete local file: {}", fileState.getLocalPath(), e);
+            }
+        }
+    }
+
+    public List<FileState> getFileStates() {
+        return List.copyOf(fileStates.values());
     }
 }

@@ -1,5 +1,6 @@
 package datasahi.siyadb.store.s3;
 
+import com.google.gson.annotations.Expose;
 import datasahi.siyadb.store.StoreConfig;
 
 public class S3Config extends StoreConfig {
@@ -10,16 +11,17 @@ public class S3Config extends StoreConfig {
     }
 
     private String roleArn;
+    @Expose(serialize = false, deserialize = false)
     private String accessKey;
+    @Expose(serialize = false, deserialize = false)
     private String secretKey;
     private String region;
     private String endpointUrl;
     private boolean signPayload;
     private boolean https = true;
     private boolean pathStyleAccess = true;
+    private String testFile;
 
-    private String bucket;
-    private String folder;
     private String workFolder;
 
     private SecurityMode securityMode;
@@ -100,22 +102,6 @@ public class S3Config extends StoreConfig {
         return this;
     }
 
-    public String getBucket() {
-        return bucket;
-    }
-
-    public String getFolder() {
-        return folder;
-    }
-
-    public void setFolder(String folder) {
-        this.folder = folder;
-    }
-
-    public void setBucket(String bucket) {
-        this.bucket = bucket;
-    }
-
     public boolean isSignPayload() {
         return signPayload;
     }
@@ -165,20 +151,27 @@ public class S3Config extends StoreConfig {
         return this;
     }
 
+    public String getTestFile() {
+        return testFile;
+    }
+
+    public S3Config setTestFile(String testFile) {
+        this.testFile = testFile;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "S3Config{" +
                 super.toString() +
                 "roleArn='" + roleArn + '\'' +
-                ", accessKey='" + accessKey + '\'' +
-                ", secretKey='" + secretKey + '\'' +
                 ", region='" + region + '\'' +
                 ", endpointUrl='" + endpointUrl + '\'' +
                 ", signPayload=" + signPayload +
                 ", https=" + https +
                 ", pathStyleAccess=" + pathStyleAccess +
-                ", bucket='" + bucket + '\'' +
-                ", folder='" + folder + '\'' +
+                ", testFile='" + testFile + '\'' +
+                ", workFolder='" + workFolder + '\'' +
                 ", securityMode=" + securityMode +
                 ", refreshClientInSeconds=" + refreshClientInSeconds +
                 ", enabled=" + enabled +

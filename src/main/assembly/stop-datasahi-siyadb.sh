@@ -26,7 +26,7 @@ call_stop_api() {
     local api_status
 
     # Try the API call with a 30-second timeout
-    api_response=$(curl -s -w "%{http_code}" --max-time 30 "http://localhost:${DATASAHI_PORT}/sync/stop" 2>/dev/null)
+    api_response=$(curl -s -w "%{http_code}" --max-time 30 "http://localhost:${DATASAHI_PORT}/shutdown" 2>/dev/null)
     api_status=$?
 
     # Check curl exit status

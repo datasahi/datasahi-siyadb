@@ -2,7 +2,9 @@ package datasahi.siyadb.store.s3;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.model.*;
+import com.google.gson.annotations.Expose;
 import datasahi.siyadb.store.*;
+import org.json.JSONPropertyIgnore;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +15,7 @@ import java.util.UUID;
 
 public class S3FileStore implements FileStore {
 
+    @Expose(serialize = false, deserialize = false)
     private final S3ClientManager s3ClientManager;
     private final S3Config s3Config;
 
@@ -27,6 +30,10 @@ public class S3FileStore implements FileStore {
 
     @Override
     public StoreConfig getConfig() {
+        return s3Config;
+    }
+
+    public S3Config getS3Config() {
         return s3Config;
     }
 

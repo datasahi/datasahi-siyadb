@@ -106,11 +106,12 @@ public class DatabaseService {
                 }
                 String columnName = columnsText.get(i);
                 sb.append('"').append(columnName).append('"').append(':');
-                if (!numericTypes.get(i) && !jsonColumns.contains(columnName)) {
+                Object columnData = row.getObject(i);
+                if (columnData != null && !numericTypes.get(i) && !jsonColumns.contains(columnName)) {
                     sb.append('"');
                 }
-                sb.append(row.getObject(i));
-                if (!numericTypes.get(i) && !jsonColumns.contains(columnName)) {
+                sb.append(columnData);
+                if (columnData != null && !numericTypes.get(i) && !jsonColumns.contains(columnName)) {
                     sb.append('"');
                 }
                 firstColumn = false;

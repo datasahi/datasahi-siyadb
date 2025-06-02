@@ -11,3 +11,5 @@ datasahi.siyadb:
   config:
     paths: ${DATASAHI_CONFIG_PATHS}
   work.dir: ${DATASAHI_WORK_DIR}
+  scheduler:
+    cleanup.seconds: ${DATASAHI_CLEANUP_SECONDS:300}

@@ -97,7 +97,7 @@ tasks.register('bundleZip', Zip) {
 
 // Create tar.gz file
 tasks.register('bundleTar', Tar) {
-    dependsOn shadowJartools
+    dependsOn shadowJar
 
     from(layout.buildDirectory.dir("libs")) {
         include '*-all.jar'

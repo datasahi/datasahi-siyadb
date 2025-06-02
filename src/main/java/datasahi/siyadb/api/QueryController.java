@@ -1,6 +1,5 @@
 package datasahi.siyadb.api;
 
-
 import datasahi.siyadb.query.QueryRequest;
 import datasahi.siyadb.query.QueryService;
 import io.micronaut.http.HttpRequest;

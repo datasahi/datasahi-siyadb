@@ -23,9 +23,9 @@ public class QueryControllerTest {
         QueryRequest queryRequest = new QueryRequest()
                 .setDatasource("s3csp")
                 .setBucket("cspdata")
-                .setFilepath("holdings.csv")
+                .setFilepath("20240903.CSV")
                 .setFiletype("csv")
-                .setQuery("SELECT * FROM s3csp_cspdata_holdings_csv LIMIT 5");
+                .setQuery("SELECT * FROM s3csp_cspdata_20240903_CSV LIMIT 5");
 
         // Send the request to the real endpoint with real QueryService
         HttpRequest<QueryRequest> request = HttpRequest.POST("/siyadb/query/execute", queryRequest);

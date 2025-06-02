@@ -10,6 +10,8 @@ public class FileState {
     private long lastAccessMillis;
     private volatile boolean loaded;
 
+    private int cachedMillis = 15 * 60 * 1000; // Default to 15 minutes
+
     public FileState(FileKey fileKey) {
         this.fileKey = fileKey;
     }
@@ -54,6 +56,19 @@ public class FileState {
         return this;
     }
 
+    public int getCachedMillis() {
+        return cachedMillis;
+    }
+
+    public FileState setCachedMillis(int cachedMillis) {
+        this.cachedMillis = cachedMillis;
+        return this;
+    }
+
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - lastAccessMillis) > cachedMillis;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -72,8 +87,10 @@ public class FileState {
         return "FileState{" +
                 "fileKey=" + fileKey +
                 ", localPath='" + localPath + '\'' +
-                ", lasrAccessMillis=" + lastAccessMillis +
+                ", tableName='" + tableName + '\'' +
+                ", lastAccessMillis=" + lastAccessMillis +
                 ", loaded=" + loaded +
+                ", cachedMillis=" + cachedMillis +
                 '}';
     }
 }

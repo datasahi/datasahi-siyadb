@@ -16,15 +16,17 @@ public class QueryService {
 
     private final DatabaseService databaseService;
     private final DataLoadService dataLoadService;
+    private final QueryAuditService queryAuditService;
 
-    public QueryService(DuckdbService duckdbService, DataLoadService dataLoadService) {
+    public QueryService(DuckdbService duckdbService, DataLoadService dataLoadService, QueryAuditService queryAuditService) {
         this.databaseService = duckdbService.getDbService();
         this.dataLoadService = dataLoadService;
+        this.queryAuditService = queryAuditService;
     }
 
     public ServiceResponse<JSONObject> execute(QueryRequest request) {
         long start = System.currentTimeMillis();
-        dataLoadService.checkAndLoadFile(request.getFileKey());
+        dataLoadService.checkAndLoad(request.getFileKey());
         QueryResponse response = databaseService.selectAsText(request.getQuery(), Collections.emptyMap(), OutputFormat.JSON);
         JSONObject json = new JSONObject();
         json.put("id", response.getId());
@@ -33,6 +35,7 @@ public class QueryService {
         long millis = System.currentTimeMillis() - start;
         ServiceResponse<JSONObject> serviceResponse =
                 new ServiceResponse<>().setData(json).setSuccess(true).setMillis(millis);
+        queryAuditService.audit(request, response, serviceResponse);
         return serviceResponse;
     }
 }
