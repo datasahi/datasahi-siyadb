@@ -1,5 +1,5 @@
 # Build stage
-FROM gradle:8.6-jdk21-alpine AS build
+FROM gradle:8-jdk21-alpine AS build
 WORKDIR /app
 COPY . .
 RUN chmod +x ./gradlew
