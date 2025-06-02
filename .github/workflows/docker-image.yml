@@ -2,7 +2,7 @@ name: Datasahi Siyadb Docker Image CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   release:
     types: [ published ]
 
