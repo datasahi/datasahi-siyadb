@@ -26,7 +26,7 @@ public class QueryService {
 
     public ServiceResponse<JSONObject> execute(QueryRequest request) {
         long start = System.currentTimeMillis();
-        dataLoadService.checkAndLoad(request.getFileKey());
+        request.getFileKeys().forEach(dataLoadService::checkAndLoad);
         QueryResponse response = databaseService.selectAsText(request.getQuery(), Collections.emptyMap(), OutputFormat.JSON);
         JSONObject json = new JSONObject();
         json.put("id", response.getId());

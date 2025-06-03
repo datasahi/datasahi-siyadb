@@ -64,6 +64,11 @@ Sample config json - `datastores.json`
 }
 ```
 A table name for a file stored in mybucket at /customer-invoices/invoices-2019.csv will be mybucket_customer_invoices_invoices_2019_csv. The table can be queried using the following SQL:
+```java
+        String tableName = datastoreid + "/" + bucket + "/" + folder + "/" + filename;
+        return tableName.replaceAll("[^a-zA-Z0-9]", "_");
+```
+
 ```sql
 select * from mybucket_customer_invoices_invoices_2019_csv where customer_id = '12345' limit 10;
 ```

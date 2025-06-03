@@ -3,13 +3,15 @@ package datasahi.siyadb.query;
 import datasahi.siyadb.load.FileKey;
 import io.micronaut.serde.annotation.Serdeable;
 
+import java.util.List;
+
 @Serdeable.Serializable
 @Serdeable.Deserializable
 public class QueryRequest {
 
     private String datasource;
     private String bucket;
-    private String filepath;
+    private List<String> filepaths;
     private String filetype;
     private String query;
 
@@ -31,12 +33,12 @@ public class QueryRequest {
         return this;
     }
 
-    public String getFilepath() {
-        return filepath;
+    public List<String> getFilepaths() {
+        return filepaths;
     }
 
-    public QueryRequest setFilepath(String filepath) {
-        this.filepath = filepath;
+    public QueryRequest setFilepaths(List<String> filepaths) {
+        this.filepaths = filepaths;
         return this;
     }
 
@@ -58,8 +60,8 @@ public class QueryRequest {
         return this;
     }
 
-    public FileKey getFileKey() {
-        return new FileKey(datasource, bucket, filepath);
+    public List<FileKey> getFileKeys() {
+        return filepaths.stream().map(filepath -> new FileKey(datasource, bucket, filepath)).toList();
     }
 
     @Override
@@ -67,7 +69,7 @@ public class QueryRequest {
         return "QueryRequest{" +
                 "datasource='" + datasource + '\'' +
                 ", bucket='" + bucket + '\'' +
-                ", filepath='" + filepath + '\'' +
+                ", filepaths='" + filepaths + '\'' +
                 ", filetype='" + filetype + '\'' +
                 ", query='" + query + '\'' +
                 '}';

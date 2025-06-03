@@ -22,7 +22,7 @@ public class QueryAuditService {
 
     public void audit(QueryRequest request, QueryResponse response, ServiceResponse<JSONObject> serviceResponse) {
         QueryAudit queryAudit = new QueryAudit()
-                .setDatasource(request.getFileKey().getDatastore())
+                .setDatasource(request.getDatasource())
                 .setQuery(request.getQuery())
                 .setRecordCount(response.getCount())
                 .setSuccess(serviceResponse.isSuccess())
