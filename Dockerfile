@@ -3,7 +3,7 @@ FROM gradle:8-jdk21-alpine AS build
 WORKDIR /app
 COPY . .
 RUN chmod +x ./gradlew
-RUN ./gradlew clean build bundleDistribution -x test
+RUN ./gradlew clean bundleDistribution -x test
 
 # Runtime stage
 FROM openjdk:21-slim
