@@ -125,20 +125,16 @@ curl -X POST 'http://localhost:8089/siyadb/query/execute' \
   "data": {
     "records": [
       {
-        "CreationDate": "2024-09-04 03:59:50.0",
-        "TransferReference": null,
-        "TransactionNumber": "23682219",
-        "Nature": "FINANCIAL",
-        "Num Of Nacks": 0,
-        "Type": "535"
+        "customerId": "C0001",
+        "createdAt": "2024-09-04 03:59:50.0",
+        "name": "ABC Consultants",
+        "type": "ENTERPRISE"
       },
       {
-        "CreationDate": "2024-09-04 03:59:50.0",
-        "TransferReference": null,
-        "TransactionNumber": "23682218",
-        "Nature": "FINANCIAL",
-        "Num Of Nacks": 0,
-        "Type": "535"
+        "customerId": "C0002",
+        "createdAt": "2024-09-05 03:29:50.0",
+        "name": "Foxtrot Ltd",
+        "type": "SME"
       }
     ],
     "count": 2,
