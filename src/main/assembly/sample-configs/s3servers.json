@@ -1,23 +1,24 @@
 {
   "datastores": [
     {
-      "id": "s3csp",
+      "id": "ecom",
       "type": "S3",
-      "name": "S3 for CSP",
+      "name": "S3 for Ecommerce",
       "accessKey": "AKIAIOSFODNN7EXAMPLE",
       "secretKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
       "region": "us-east-1",
       "endpointUrl": "http://localhost:9444",
       "cachedMinutes": 1,
-      "testFile": "bucket/folder/test.txt",
-      "datasets": [
-        {
-          "id": "s3csp-dataset",
-          "name": "Customer data",
-          "filePattern": "bucket/folder/customer*.txt",
-          "indices": ["customer_id, order_date", "customer_name"]
-        }
-      ]
+      "testFile": "cspdata/holdings.csv"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "ecom-orders",
+      "datastore": "ecom",
+      "name": "Customer Orders",
+      "filePattern": "^cspdata/\\d{8}\\.CSV$",
+      "indices": ["TransactionNumber, Type", "Uumid"]
     }
   ]
 }

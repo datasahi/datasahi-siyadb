@@ -6,7 +6,7 @@ public interface FileStore {
 
     FileTransferResponse download(FileTransferRequest request);
 
-    public interface FileListProcessor {
+    interface FileListProcessor {
         boolean processList(FileListResponse listResponse);
     }
 

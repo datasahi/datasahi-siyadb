@@ -10,6 +10,8 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 @MicronautTest
 public class QueryControllerTest {
 
@@ -21,9 +23,9 @@ public class QueryControllerTest {
     void testExecuteQuery() throws Exception {
         // Prepare test data
         QueryRequest queryRequest = new QueryRequest()
-                .setDatasource("s3csp")
+                .setDatastore("s3csp")
                 .setBucket("cspdata")
-                .setFilepath("20240903.CSV")
+                .setFilepaths(List.of("20240903.CSV"))
                 .setFiletype("csv")
                 .setQuery("SELECT * FROM s3csp_cspdata_20240903_CSV LIMIT 5");
 

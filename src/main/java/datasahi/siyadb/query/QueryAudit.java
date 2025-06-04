@@ -7,6 +7,7 @@ public class QueryAudit {
     private int recordCount;
     private boolean success;
     private long millis;
+    private String message;
 
     public String getDatasource() {
         return datasource;
@@ -53,6 +54,15 @@ public class QueryAudit {
         return this;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
+    public QueryAudit setMessage(String message) {
+        this.message = message;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "QueryAudit{" +
@@ -60,6 +70,7 @@ public class QueryAudit {
                 ", query='" + query + '\'' +
                 ", recordCount=" + recordCount +
                 ", success=" + success +
+                ", message=" + message +
                 ", millis=" + millis +
                 '}';
     }

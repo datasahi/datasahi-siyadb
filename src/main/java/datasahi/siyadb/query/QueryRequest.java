@@ -9,18 +9,18 @@ import java.util.List;
 @Serdeable.Deserializable
 public class QueryRequest {
 
-    private String datasource;
+    private String datastore;
     private String bucket;
     private List<String> filepaths;
     private String filetype;
     private String query;
 
-    public String getDatasource() {
-        return datasource;
+    public String getDatastore() {
+        return datastore;
     }
 
-    public QueryRequest setDatasource(String datasource) {
-        this.datasource = datasource;
+    public QueryRequest setDatastore(String datastore) {
+        this.datastore = datastore;
         return this;
     }
 
@@ -61,13 +61,13 @@ public class QueryRequest {
     }
 
     public List<FileKey> getFileKeys() {
-        return filepaths.stream().map(filepath -> new FileKey(datasource, bucket, filepath)).toList();
+        return filepaths.stream().map(filepath -> new FileKey(datastore, bucket, filepath)).toList();
     }
 
     @Override
     public String toString() {
         return "QueryRequest{" +
-                "datasource='" + datasource + '\'' +
+                "datastore='" + datastore + '\'' +
                 ", bucket='" + bucket + '\'' +
                 ", filepaths='" + filepaths + '\'' +
                 ", filetype='" + filetype + '\'' +

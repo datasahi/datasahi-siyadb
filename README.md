@@ -116,7 +116,7 @@ docker exec <container_id> /app/stop.sh
 curl -X POST 'http://localhost:8089/siyadb/query/execute' \
 -H 'Content-Type: application/json' \
 -d '{
-  "datasource": "s3csp",
+  "datastore": "s3csp",
   "bucket": "cspdata",
   "filepath": "20240903.CSV",
   "filetype": "csv",

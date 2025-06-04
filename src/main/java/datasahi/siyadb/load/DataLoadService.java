@@ -3,6 +3,7 @@ package datasahi.siyadb.load;
 import datasahi.siyadb.common.db.DatabaseService;
 import datasahi.siyadb.config.ConfigService;
 import datasahi.siyadb.duckdb.DuckdbService;
+import datasahi.siyadb.store.DatasetRegistry;
 import datasahi.siyadb.store.FileTransferRequest;
 import datasahi.siyadb.store.FileTransferResponse;
 import datasahi.siyadb.store.StoreRegistry;
@@ -23,14 +24,16 @@ public class DataLoadService {
 
     private final DatabaseService databaseService;
     private final StoreRegistry storeRegistry;
+    private final DatasetRegistry datasetRegistry;
     private final ConfigService configService;
 
     private final Map<FileKey, FileState> fileStates = new ConcurrentHashMap<>();
 
-    public DataLoadService(DuckdbService duckdbService, StoreRegistry storeRegistry,
+    public DataLoadService(DuckdbService duckdbService, StoreRegistry storeRegistry, DatasetRegistry datasetRegistry,
                            ConfigService configService) {
         this.databaseService = duckdbService.getDbService();
         this.storeRegistry = storeRegistry;
+        this.datasetRegistry = datasetRegistry;
         this.configService = configService;
     }
 
@@ -70,15 +73,31 @@ public class DataLoadService {
         FileTransferResponse response = storeRegistry.get(fileKey.getDatastore()).download(request);
         if (response.isExists()) {
             String tableName = fileKey.getTableName();
-            String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " AS SELECT * FROM read_csv_auto('" +
-                    targetPath + "', HEADER = true);";
-            databaseService.executeUpdateSql(sql);
-            databaseService.executeUpdateSql("ANALYZE " + tableName);
+            createTable(tableName, targetPath);
+            createIndices(tableName, fileKey);
             return tableName;
-            //todo create indexes
         } else {
             throw new RuntimeException("Unable to load file from :: " + sourcePath);
         }
+    }
+
+    private void createIndices(String tableName, FileKey fileKey) {
+        List<String> indices = datasetRegistry.getIndices(fileKey);
+        if (indices.isEmpty()) return;
+
+        int counter = 1;
+        for (String index : indices) {
+            String indexName = tableName + "_" + counter++;
+            String createIndexSql = "CREATE INDEX IF NOT EXISTS " + indexName + " ON " + tableName + " (" + index + ");";
+            databaseService.executeUpdateSql(createIndexSql);
+        }
+    }
+
+    private void createTable(String tableName, String targetPath) {
+        String createSql = "CREATE TABLE IF NOT EXISTS " + tableName + " AS SELECT * FROM read_csv_auto('" +
+                targetPath + "', HEADER = true);";
+        databaseService.executeUpdateSql(createSql);
+        databaseService.executeUpdateSql("ANALYZE " + tableName);
     }
 
     public void cleanup() {
@@ -101,9 +120,19 @@ public class DataLoadService {
             fileStates.remove(fileKey);
         }
 
+        int indicesCount = datasetRegistry.getIndices(fileKey).size();
+
         synchronized (fileState.getFileKey()) {
+
             String tableName = fileState.getTableName();
+
             databaseService.executeUpdateSql("DROP TABLE IF EXISTS " + tableName);
+            for (int counter = 1; counter <= indicesCount; counter++) {
+                String indexName = tableName + "_" + counter;
+                String createIndexSql = "DROP INDEX IF EXISTS " + indexName + ";";
+                databaseService.executeUpdateSql(createIndexSql);
+            }
+
             try {
                 Files.deleteIfExists(java.nio.file.Paths.get(fileState.getLocalPath()));
             } catch (IOException e) {
