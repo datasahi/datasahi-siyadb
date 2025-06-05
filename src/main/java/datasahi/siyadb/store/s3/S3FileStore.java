@@ -4,7 +4,6 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.model.*;
 import com.google.gson.annotations.Expose;
 import datasahi.siyadb.store.*;
-import org.json.JSONPropertyIgnore;
 
 import java.io.File;
 import java.io.IOException;
@@ -164,18 +163,16 @@ public class S3FileStore implements FileStore {
 
         try {
             int firstSlash = request.getSourcePath().indexOf('/');
-            int lastSlash = request.getSourcePath().lastIndexOf('/');
             int lastSlashLocalFilePath = request.getTargetPath().lastIndexOf('/');
-
             String bucket = request.getSourcePath().substring(0, firstSlash);
             String key = request.getSourcePath().substring(firstSlash + 1);
-
             String filePath = request.getTargetPath().substring(0, lastSlashLocalFilePath); //include localDirectory
-            String fileKeyName = request.getSourcePath().substring(lastSlash + 1);
-            //file extension is taken from key and name is taken from local path
-            String file = request.getTargetPath().substring(lastSlashLocalFilePath + 1) + "_" + fileKeyName;
-
             File destinationFile = new File(request.getTargetPath());
+            try {
+                Files.deleteIfExists(destinationFile.toPath());
+            } catch (IOException e) {
+                // Nothing to do
+            }
             ObjectMetadata object = s3ClientManager.getS3Client().getObject(new GetObjectRequest(bucket, key), destinationFile);
 
             FileTransferResponse transferResponse = new FileTransferResponse();

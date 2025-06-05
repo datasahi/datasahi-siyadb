@@ -7,6 +7,7 @@ public class FileState {
     private final FileKey fileKey;
     private String localPath;
     private String tableName;
+    private long createdMillis = System.currentTimeMillis();
     private long lastAccessMillis;
     private volatile boolean loaded;
 
@@ -66,7 +67,7 @@ public class FileState {
     }
 
     public boolean isExpired() {
-        return (System.currentTimeMillis() - lastAccessMillis) > cachedMillis;
+        return (System.currentTimeMillis() - createdMillis) > cachedMillis;
     }
 
     @Override
@@ -88,6 +89,7 @@ public class FileState {
                 "fileKey=" + fileKey +
                 ", localPath='" + localPath + '\'' +
                 ", tableName='" + tableName + '\'' +
+                ", createdMillis=" + createdMillis +
                 ", lastAccessMillis=" + lastAccessMillis +
                 ", loaded=" + loaded +
                 ", cachedMillis=" + cachedMillis +

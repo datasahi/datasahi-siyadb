@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,6 +50,7 @@ public class DataLoadService {
                 fileState = new FileState(fileKey);
                 fileState.setCachedMillis(storeRegistry.get(fileKey.getDatastore()).getConfig().getCachedMinutes() * 60 * 1000);
                 fileStates.put(fileKey, fileState);
+                LOGGER.info("File loaded :: " + fileState);
             }
         }
 
@@ -57,17 +59,19 @@ public class DataLoadService {
 
         synchronized (fileState.getFileKey()) {
             if (fileState.isLoaded()) return true;
-            String tableName = load(fileKey);
+            String tableName = load(fileState);
             fileState.setTableName(tableName).setLastAccessMillis(System.currentTimeMillis()).setLoaded(true);
         }
 
         return true;
     }
 
-    private String load(FileKey fileKey) {
+    private String load(FileState fileState) {
 
+        FileKey fileKey = fileState.getFileKey();
         String sourcePath = fileKey.getSourcePath();
         String targetPath = configService.getWorkDir() + "/" + sourcePath;
+        fileState.setLocalPath(targetPath);
         FileTransferRequest request = new FileTransferRequest().setSourcePath(sourcePath)
                 .setTargetPath(targetPath);
         FileTransferResponse response = storeRegistry.get(fileKey.getDatastore()).download(request);
@@ -94,6 +98,8 @@ public class DataLoadService {
     }
 
     private void createTable(String tableName, String targetPath) {
+        String dropSql = "DROP TABLE IF EXISTS " + tableName + ";";
+        databaseService.executeUpdateSql(dropSql);
         String createSql = "CREATE TABLE IF NOT EXISTS " + tableName + " AS SELECT * FROM read_csv_auto('" +
                 targetPath + "', HEADER = true);";
         databaseService.executeUpdateSql(createSql);
@@ -134,7 +140,7 @@ public class DataLoadService {
             }
 
             try {
-                Files.deleteIfExists(java.nio.file.Paths.get(fileState.getLocalPath()));
+                Files.deleteIfExists(Paths.get(fileState.getLocalPath()));
             } catch (IOException e) {
                 // Nothing to do
                 LOGGER.warn("Failed to delete local file: {}", fileState.getLocalPath(), e);
