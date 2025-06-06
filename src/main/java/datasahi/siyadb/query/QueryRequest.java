@@ -3,22 +3,24 @@ package datasahi.siyadb.query;
 import datasahi.siyadb.load.FileKey;
 import io.micronaut.serde.annotation.Serdeable;
 
+import java.util.List;
+
 @Serdeable.Serializable
 @Serdeable.Deserializable
 public class QueryRequest {
 
-    private String datasource;
+    private String datastore;
     private String bucket;
-    private String filepath;
+    private List<String> filepaths;
     private String filetype;
     private String query;
 
-    public String getDatasource() {
-        return datasource;
+    public String getDatastore() {
+        return datastore;
     }
 
-    public QueryRequest setDatasource(String datasource) {
-        this.datasource = datasource;
+    public QueryRequest setDatastore(String datastore) {
+        this.datastore = datastore;
         return this;
     }
 
@@ -31,12 +33,12 @@ public class QueryRequest {
         return this;
     }
 
-    public String getFilepath() {
-        return filepath;
+    public List<String> getFilepaths() {
+        return filepaths;
     }
 
-    public QueryRequest setFilepath(String filepath) {
-        this.filepath = filepath;
+    public QueryRequest setFilepaths(List<String> filepaths) {
+        this.filepaths = filepaths;
         return this;
     }
 
@@ -58,16 +60,16 @@ public class QueryRequest {
         return this;
     }
 
-    public FileKey getFileKey() {
-        return new FileKey(datasource, bucket, filepath);
+    public List<FileKey> getFileKeys() {
+        return filepaths.stream().map(filepath -> new FileKey(datastore, bucket, filepath)).toList();
     }
 
     @Override
     public String toString() {
         return "QueryRequest{" +
-                "datasource='" + datasource + '\'' +
+                "datastore='" + datastore + '\'' +
                 ", bucket='" + bucket + '\'' +
-                ", filepath='" + filepath + '\'' +
+                ", filepaths='" + filepaths + '\'' +
                 ", filetype='" + filetype + '\'' +
                 ", query='" + query + '\'' +
                 '}';

@@ -45,25 +45,41 @@ DATASAHI_CONFIG_PATHS=/custom/path/datastores.json
 ```
 
 Sample config json - `datastores.json`
+1. datastores defines the stores and their access details
+2. datasets groups files together and to define indices on those group of files. This is optional, but recommended for better performance.
+3. the config file can be named anything, but should be passed in the env variable `DATASAHI_CONFIG_PATHS`
 ```json
 {
   "datastores": [
     {
-      "id": "as3store",
+      "id": "ecom",
       "type": "S3",
-      "name": "An S3 Store",
-      "accessKey": "KEY",
-      "secretKey": "KEY",
+      "name": "S3 for Ecommerce",
+      "accessKey": "AKIAIOSFODNN7EXAMPLE",
+      "secretKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
       "region": "us-east-1",
       "endpointUrl": "http://localhost:9444",
-      "bucket": "mybucket",
-      "folder": "",
-      "cachedMinutes": 1
+      "cachedMinutes": 1,
+      "testFile": "cspdata/holdings.csv"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "ecom-orders",
+      "datastore": "ecom",
+      "name": "Customer Orders",
+      "filePattern": "^cspdata/\\d{8}\\.CSV$",
+      "indices": ["TransactionNumber, Type", "Uumid"]
     }
   ]
 }
 ```
 A table name for a file stored in mybucket at /customer-invoices/invoices-2019.csv will be mybucket_customer_invoices_invoices_2019_csv. The table can be queried using the following SQL:
+```java
+        String tableName = datastoreid + "/" + bucket + "/" + folder + "/" + filename;
+        return tableName.replaceAll("[^a-zA-Z0-9]", "_");
+```
+
 ```sql
 select * from mybucket_customer_invoices_invoices_2019_csv where customer_id = '12345' limit 10;
 ```
@@ -108,14 +124,12 @@ docker exec <container_id> /app/stop.sh
 **Request:**
 ```shell
 
-curl -X POST 'http://localhost:8089/siyadb/query/execute' \
--H 'Content-Type: application/json' \
--d '{
-  "datasource": "s3csp",
+curl -X POST 'http://localhost:8089/siyadb/query/execute' -H 'Content-Type: application/json' -d '{
+  "datastore": "ecom",
   "bucket": "cspdata",
-  "filepath": "20240903.CSV",
+  "filepaths": ["20240903.CSV"],
   "filetype": "csv",
-  "query": "SELECT * FROM s3csp_cspdata_20240903_CSV LIMIT 5"
+  "query": "SELECT * FROM ecom_cspdata_20240903_CSV LIMIT 5"
 }'
 ```
 

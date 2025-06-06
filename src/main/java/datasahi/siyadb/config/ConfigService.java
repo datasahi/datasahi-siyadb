@@ -22,7 +22,7 @@ public class ConfigService {
     @Value("${datasahi.siyadb.work.dir}")
     private String workDir;
 
-    @Value("${datasahi.siyadb.schedulercleanup.seconds:300}")
+    @Value("${datasahi.siyadb.schedulercleanup.seconds:30}")
     private int cleanupSeconds;
 
     public ConfigService(Environment environment) {

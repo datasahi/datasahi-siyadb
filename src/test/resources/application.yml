@@ -1,5 +1,5 @@
 datasahi.siyadb:
   config:
     paths:
-    - /xmnt/projects/v2datasahi/datasahi-siyadb/src/main/assembly/sample-configs/s3servers.json
+    - /xmnt/projects/v2datasahi/datasahi-siyadb/src/main/assembly/sample-configs/sample_config.json
   work.dir: /tmp/siyadb
