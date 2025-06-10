@@ -45,7 +45,9 @@ public class ServerConfiguration {
     private void loadConfig(String path) {
         JSONObject jo = new FileUtil().readJsonFile(path);
         addJsonObjects(jo, stores, "datastores");
-        this.datasets.addAll(parseDatasetArray(jo.optJSONArray("datasets").toString()));
+        if (jo.has("datasets")) {
+            this.datasets.addAll(parseDatasetArray(jo.optJSONArray("datasets").toString()));
+        }
     }
 
     private void addJsonObjects(JSONObject jo, List<JSONObject> list, String key) {

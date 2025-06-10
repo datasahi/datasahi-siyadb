@@ -3,6 +3,8 @@ FROM gradle:8-jdk21-alpine AS build
 WORKDIR /app
 COPY . .
 RUN chmod +x ./gradlew
+RUN APP_VERSION=$(grep 'applicationVersion' gradle.properties | cut -d'=' -f2) && \
+    echo "export APP_VERSION=$APP_VERSION" > /app/version.env
 RUN ./gradlew clean bundleDistribution -x test
 
 # Runtime stage
@@ -13,9 +15,13 @@ WORKDIR /app
 RUN mkdir -p /app/config /app/work/logs
 
 # Copy application artifacts
-COPY --from=build /app/build/libs/*-all.jar datasahi-siyadb-0.1-all.jar
+COPY --from=build /app/version.env /app/
+RUN source /app/version.env && echo "Using version: $APP_VERSION"
+COPY --from=build /app/build/libs/*-all.jar /app/datasahi-siyadb-${APP_VERSION}-all.jar
 COPY src/main/assembly/start-datasahi-siyadb.sh /app/start.sh
 COPY src/main/assembly/stop-datasahi-siyadb.sh /app/stop.sh
+COPY src/main/assembly/start-datasahi-siyadb.bat /app/start.bat
+COPY src/main/assembly/stop-datasahi-siyadb.bat /app/stop.bat
 COPY src/main/assembly/datasahi-siyadb.env /app/datasahi-siyadb.env
 
 # Set default environment variables from the .env file

@@ -4,6 +4,7 @@
 export DATASAHI_PORT=${DATASAHI_PORT:-8080}  # Default to 8080 if not set
 export DATASAHI_CONFIG_PATHS=${DATASAHI_CONFIG_PATHS:-"config"}  # Default to "config" if not set
 export DATASAHI_WORK_DIR=${DATASAHI_WORK_DIR:-"work"}  # Default to "work" if not set
+export APP_VERSION=${APP_VERSION:-"0.1.2"}  # Default to 0.1.2 if not set
 export AWS_JAVA_V1_DISABLE_DEPRECATION_ANNOUNCEMENT="true"  # Suppress AWS SDK v1 deprecation warnings
 
 # Create logs directory if it doesn't exist
@@ -11,7 +12,7 @@ LOGS_DIR="$DATASAHI_WORK_DIR/logs"
 mkdir -p "$LOGS_DIR"
 
 # Set Java memory and GC logging options
-export JAVA_OPTS="-Xms512m -Xmx2048m \
+export JAVA_OPTS="-Xms128m -Xmx512m \
 -Xlog:gc*=info:file=$LOGS_DIR/datasahi-siyadb.gc.log:time,uptime,level,tags:filecount=5,filesize=100m \
 -XX:+HeapDumpOnOutOfMemoryError \
 -XX:HeapDumpPath=$LOGS_DIR"
@@ -41,7 +42,7 @@ check_java_version() {
 
 # Function to start the server
 start_server() {
-    local jar_file="datasahi-siyadb-0.1.1-all.jar"
+    local jar_file="datasahi-siyadb-${APP_VERSION}-all.jar"
     local log_file="$LOGS_DIR/datasahi-siyadb.log"
 
     if [ ! -f "$jar_file" ]; then

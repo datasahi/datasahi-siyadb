@@ -5,6 +5,7 @@ rem Set environment variables with defaults
 if not defined DATASAHI_PORT set DATASAHI_PORT=8080
 if not defined DATASAHI_CONFIG_PATHS set DATASAHI_CONFIG_PATHS=config
 if not defined DATASAHI_WORK_DIR set DATASAHI_WORK_DIR=work
+if not defined APP_VERSION set APP_VERSION=0.1.2
 set AWS_JAVA_V1_DISABLE_DEPRECATION_ANNOUNCEMENT=true
 
 rem Create logs directory if it doesn't exist
@@ -12,7 +13,7 @@ set LOGS_DIR=%DATASAHI_WORK_DIR%\logs
 if not exist "%LOGS_DIR%" mkdir "%LOGS_DIR%"
 
 rem Set Java memory and GC logging options
-set "JAVA_OPTS=-Xms512m -Xmx2048m"
+set "JAVA_OPTS=-Xms128m -Xmx512m"
 set "JAVA_OPTS=!JAVA_OPTS! -Xlog:gc*=info:file=%LOGS_DIR%\datasahi-siyadb.gc.log:time,uptime,level,tags:filecount=5,filesize=100m"
 set "JAVA_OPTS=!JAVA_OPTS! -XX:+HeapDumpOnOutOfMemoryError"
 set "JAVA_OPTS=!JAVA_OPTS! -XX:HeapDumpPath=%LOGS_DIR%"
@@ -38,7 +39,7 @@ echo Java version !JAVA_VERSION! detected
 
 rem Function to start the server
 :start_server
-set "jar_file=datasahi-siyadb-0.1.1-all.jar"
+set "jar_file=datasahi-siyadb-%APP_VERSION%-all.jar"
 set "log_file=%LOGS_DIR%\datasahi-siyadb.log"
 
 if not exist "%jar_file%" (
