@@ -20,7 +20,7 @@ RUN mkdir -p /app/config /app/work/logs
 #COPY --from=build /app/version.env /app/
 #RUN source /app/version.env && echo "Using version: $APP_VERSION"
 RUN echo "Using version: $APP_VERSION"
-COPY --from=build /app/build/libs/*-all.jar /app/datasahi-siyadb-${APP_VERSION}-all.jar
+COPY --from=build /app/build/libs/*-all.jar datasahi-siyadb-${APP_VERSION}-all.jar
 COPY src/main/assembly/start-datasahi-siyadb.sh /app/start.sh
 COPY src/main/assembly/stop-datasahi-siyadb.sh /app/stop.sh
 COPY src/main/assembly/start-datasahi-siyadb.bat /app/start.bat
