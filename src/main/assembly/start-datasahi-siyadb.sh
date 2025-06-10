@@ -42,7 +42,7 @@ check_java_version() {
 
 # Function to start the server
 start_server() {
-    local jar_file="datasahi-siyadb-${APP_VERSION}-all.jar"
+    local jar_file="./datasahi-siyadb-${APP_VERSION}-all.jar"
     local log_file="$LOGS_DIR/datasahi-siyadb.log"
 
     if [ ! -f "$jar_file" ]; then
