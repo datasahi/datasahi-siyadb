@@ -17,7 +17,7 @@ WORKDIR /app
 RUN mkdir -p /app/config /app/work/logs
 
 # Copy application artifacts
-COPY --from=build /app/version.env /app/
+#COPY --from=build /app/version.env /app/
 #RUN source /app/version.env && echo "Using version: $APP_VERSION"
 RUN echo "Using version: $APP_VERSION"
 COPY --from=build /app/build/libs/*-all.jar /app/datasahi-siyadb-${APP_VERSION}-all.jar
