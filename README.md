@@ -52,7 +52,7 @@ Sample config json - `datastores.json`
 {
   "datastores": [
     {
-      "id": "ecom",
+      "id": "ecomstore",
       "type": "S3",
       "name": "S3 for Ecommerce",
       "accessKey": "AKIAIOSFODNN7EXAMPLE",
@@ -60,7 +60,7 @@ Sample config json - `datastores.json`
       "region": "us-east-1",
       "endpointUrl": "http://localhost:9444",
       "cachedMinutes": 1,
-      "testFile": "cspdata/holdings.csv"
+      "testFile": "datafolder/orders.csv"
     }
   ],
   "datasets": [
@@ -68,8 +68,8 @@ Sample config json - `datastores.json`
       "id": "ecom-orders",
       "datastore": "ecom",
       "name": "Customer Orders",
-      "filePattern": "^cspdata/\\d{8}\\.CSV$",
-      "indices": ["TransactionNumber, Type", "Uumid"]
+      "filePattern": "^ecom/\\d{8}\\.CSV$",
+      "indices": ["name, type", "customerId"]
     }
   ]
 }
@@ -89,25 +89,20 @@ Duckdb sql is supported, please refer to [DuckDB documentation](https://duckdb.o
 
 ```shell
 # Pull the latest image
-docker pull datasahi/datasahi-siyadb:latest
+docker pull ghcr.io/datasahi/datasahi-siyadb:latest
 
 # Run with default env values from datasahi-siyadb.env
-docker run -p 8082:8082 datasahi-siyadb:0.1
-
-# Override specific environment variables
-docker run \
--p 8082:8082 \
--e DATASAHI_PORT=8082 \
--e DATASAHI_WORK_DIR=/custom/work/dir \
--e DATASAHI_CONFIG_PATHS=/custom/path/siyadb.json \
-datasahi-siyadb:0.1
+docker run -p 8082:8082 datasahi-siyadb:latest
 
 # Volume mount for custom configs
 docker run \
 -p 8082:8082 \
--v /local/path/to/config:/custom/path \
--v /local/path/to/work:/custom/work/dir \
-datasahi-siyadb:0.1
+-v /local/path/to/config:/app/config \
+-v /local/path/to/work:/app/work \
+-e DATASAHI_PORT=8082 \
+-e DATASAHI_WORK_DIR=/app/work \
+-e DATASAHI_CONFIG_PATHS=/app/config/siyadb.json \
+datasahi-siyadb:latest
 ```
 
 ### Stopping docker container
@@ -125,11 +120,11 @@ docker exec <container_id> /app/stop.sh
 ```shell
 
 curl -X POST 'http://localhost:8089/siyadb/query/execute' -H 'Content-Type: application/json' -d '{
-  "datastore": "ecom",
-  "bucket": "cspdata",
-  "filepaths": ["20240903.CSV"],
+  "datastore": "ecomstore",
+  "bucket": "ecombucket",
+  "filepaths": ["datafolder/orders.csv"],
   "filetype": "csv",
-  "query": "SELECT * FROM ecom_cspdata_20240903_CSV LIMIT 5"
+  "query": "SELECT * FROM ecomstore_ecombucket_datafolder_orders_csv LIMIT 5"
 }'
 ```
 

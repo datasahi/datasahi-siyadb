@@ -4,7 +4,7 @@ plugins {
     id("io.micronaut.aot") version "4.4.4"
 }
 
-version = "0.1.1"
+version = applicationVersion
 group = "datasahi.siyadb"
 
 repositories {
