@@ -108,11 +108,7 @@ datasahi-siyadb:latest
 ### Stopping docker container
 
 ```shell
-# Method 1: Docker stop
 docker stop <container_id>
-
-# Method 2: Use the included stop script (requires Docker exec)
-docker exec <container_id> /app/stop.sh
 ```
 
 ### Sample queries via POST requests
