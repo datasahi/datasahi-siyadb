@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Set environment variables
+export DATASAHI_PORT=${DATASAHI_PORT:-8080}  # Default to 8080 if not set
+export DATASAHI_CONFIG_PATHS=${DATASAHI_CONFIG_PATHS:-"config"}  # Default to "config" if not set
+export DATASAHI_WORK_DIR=${DATASAHI_WORK_DIR:-"work"}  # Default to "work" if not set
+export APP_VERSION=${APP_VERSION:-"0.1.2"}  # Default to 0.1.2 if not set
+export AWS_JAVA_V1_DISABLE_DEPRECATION_ANNOUNCEMENT="true"  # Suppress AWS SDK v1 deprecation warnings
+
+# Create logs directory if it doesn't exist
+LOGS_DIR="$DATASAHI_WORK_DIR/logs"
+mkdir -p "$LOGS_DIR"
+
+# Set Java memory and GC logging options
+export JAVA_OPTS="-Xms128m -Xmx512m \
+-Xlog:gc*=info:file=$LOGS_DIR/datasahi-siyadb.gc.log:time,uptime,level,tags:filecount=5,filesize=100m \
+-XX:+HeapDumpOnOutOfMemoryError \
+-XX:HeapDumpPath=$LOGS_DIR"
+
+# Function to check Java version
+check_java_version() {
+    if ! command -v java >/dev/null 2>&1; then
+        echo "Error: Java is not installed or not in PATH"
+        exit 1
+    fi
+
+    # Get Java version
+    java_version=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F. '{print $1}')
+
+    if [ -z "$java_version" ]; then
+        echo "Error: Could not determine Java version"
+        exit 1
+    fi
+
+    if [ "$java_version" -lt 17 ]; then
+        echo "Error: Java version must be 17 or higher. Current version: $java_version"
+        exit 1
+    fi
+
+    echo "Java version $java_version detected"
+}
+
+# Function to start the server
+start_server() {
+    local jar_file="./datasahi-siyadb-${APP_VERSION}-all.jar"
+    local log_file="$LOGS_DIR/datasahi-siyadb.log"
+    local gc_log_file="$LOGS_DIR/datasahi-siyadb.gc.log"
+
+    if [ ! -f "$jar_file" ]; then
+        echo "Error: $jar_file not found in current directory"
+        exit 1
+    fi
+
+    echo "Starting Datasahi Siyadb server..."
+    echo "Using JAVA_OPTS: $JAVA_OPTS"
+    echo "Port: $DATASAHI_PORT"
+    echo "Config Paths: $DATASAHI_CONFIG_PATHS"
+    echo "Work Directory: $DATASAHI_WORK_DIR"
+    echo "Log file: $log_file"
+    echo "GC log file: $gc_log_file"
+    echo "To follow logs: tail -f $log_file"
+    echo "Health endpoint: http://localhost:$DATASAHI_PORT/health"
+    echo "Health check to see all datastores are setup: http://localhost:$DATASAHI_PORT/health/check"
+
+    # Start the server and redirect output to log file
+    java $JAVA_OPTS -jar "$jar_file" > "$log_file" 2>&1
+}
+
+# Main execution
+echo "Initializing Datasahi Siyadb..."
+
+# Check Java version
+check_java_version
+
+# Start the server
+start_server

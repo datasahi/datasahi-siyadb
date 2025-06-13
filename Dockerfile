@@ -3,10 +3,6 @@ FROM gradle:8-jdk21-alpine AS build
 WORKDIR /app
 COPY . .
 RUN chmod +x ./gradlew
-#RUN APP_VERSION=$(grep 'applicationVersion' gradle.properties | cut -d'=' -f2) && \
-#    echo "export APP_VERSION=$APP_VERSION" > /app/version.env
-RUN export APP_VERSION=0.1.2
-
 RUN ./gradlew clean bundleDistribution -x test
 
 # Runtime stage
@@ -19,17 +15,13 @@ RUN mkdir -p /app/config /app/work/logs
 # Copy application artifacts
 #COPY --from=build /app/version.env /app/
 #RUN source /app/version.env && echo "Using version: $APP_VERSION"
-RUN echo "Using version: $APP_VERSION"
-COPY build/libs/datasahi-siyadb-${APP_VERSION}-all.jar /app/datasahi-siyadb-${APP_VERSION}-all.jar
-COPY src/main/assembly/start-datasahi-siyadb.sh /app/start.sh
+COPY build/libs/datasahi-siyadb-0.1.2-all.jar /app/datasahi-siyadb-0.1.2-all.jar
+COPY src/main/assembly/docker-start-datasahi-siyadb.sh /app/start.sh
 COPY src/main/assembly/stop-datasahi-siyadb.sh /app/stop.sh
-COPY src/main/assembly/start-datasahi-siyadb.bat /app/start.bat
-COPY src/main/assembly/stop-datasahi-siyadb.bat /app/stop.bat
-COPY src/main/assembly/datasahi-siyadb.env /app/datasahi-siyadb.env
 
-# Set default environment variables from the .env file
+# Set default environment variables from the .RUN echo "Using version: $APP_VERSION"env file
 ENV DATASAHI_PORT=8082
-ENV DATASAHI_WORK_DIR=/app/work/dir
+ENV DATASAHI_WORK_DIR=/app/work
 ENV DATASAHI_CONFIG_PATHS=/app/config/siyadb.json
 
 # Expose the port from the env file
@@ -39,4 +31,4 @@ EXPOSE 8082
 RUN chmod +x /app/start.sh /app/stop.sh
 
 # Entrypoint remains the start script
-ENTRYPOINT ["/app/start.sh"]
+CMD ["/app/start.sh"]
