@@ -13,9 +13,7 @@ WORKDIR /app
 RUN mkdir -p /app/config /app/work/logs
 
 # Copy application artifacts
-#COPY --from=build /app/version.env /app/
-#RUN source /app/version.env && echo "Using version: $APP_VERSION"
-COPY build/libs/datasahi-siyadb-0.1.2-all.jar /app/datasahi-siyadb-0.1.2-all.jar
+COPY --from=build /app/build/libs/datasahi-siyadb-0.1.2-all.jar /app/datasahi-siyadb-0.1.2-all.jar
 COPY src/main/assembly/docker-start-datasahi-siyadb.sh /app/start.sh
 COPY src/main/assembly/stop-datasahi-siyadb.sh /app/stop.sh
 
