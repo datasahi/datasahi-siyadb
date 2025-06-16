@@ -6,6 +6,10 @@ public interface FileStore {
 
     FileTransferResponse download(FileTransferRequest request);
 
+    FileTransferResponse upload(FileTransferRequest transferRequest);
+
+    FileListResponse listFiles(String folder);
+
     interface FileListProcessor {
         boolean processList(FileListResponse listResponse);
     }

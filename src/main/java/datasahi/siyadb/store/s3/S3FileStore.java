@@ -1,12 +1,15 @@
 package datasahi.siyadb.store.s3;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.model.*;
 import com.google.gson.annotations.Expose;
 import datasahi.siyadb.store.*;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,9 +39,8 @@ public class S3FileStore implements FileStore {
         return s3Config;
     }
 
-    //@Override
+    @Override
     public FileListResponse listFiles(String folder) {
-
         String bucket;
         String prefix;
 
@@ -51,116 +53,148 @@ public class S3FileStore implements FileStore {
             prefix = "";
         }
 
-        FileListResponse response = new FileListResponse();
-        ObjectListing objectListing;
-        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-                .withBucketName(bucket).withPrefix(prefix).withMaxKeys(1000);
+        FileListResponse fileListResponse = new FileListResponse();
 
-        do {
-            try {
-                objectListing = s3ClientManager.getS3Client().listObjects(bucket, prefix);
+        try {
+            ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+                    .bucket(bucket)
+                    .prefix(prefix)
+                    .maxKeys(1000)
+                    .build();
+
+            ListObjectsV2Response listObjectsResponse;
+            String continuationToken = null;
+
+            do {
+                if (continuationToken != null) {
+                    listObjectsRequest = listObjectsRequest.toBuilder()
+                            .continuationToken(continuationToken)
+                            .build();
+                }
+
+                listObjectsResponse = s3ClientManager.getS3Client().listObjectsV2(listObjectsRequest);
                 String file;
                 String filePath;
-                for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-                    if (objectSummary.getSize() != 0) {
-                        int lastSlash = objectSummary.getKey().lastIndexOf('/');
+
+                for (S3Object s3Object : listObjectsResponse.contents()) {
+                    if (s3Object.size() != 0) {
+                        int lastSlash = s3Object.key().lastIndexOf('/');
                         if (lastSlash > 0) {
-                            file = objectSummary.getKey().substring(lastSlash + 1);
-                            filePath = objectSummary.getBucketName() + "/" + objectSummary.getKey().substring(0, lastSlash);
+                            file = s3Object.key().substring(lastSlash + 1);
+                            filePath = bucket + "/" + s3Object.key().substring(0, lastSlash);
                         } else {
-                            file = objectSummary.getKey();
-                            filePath = objectSummary.getBucketName();
+                            file = s3Object.key();
+                            filePath = bucket;
                         }
 
-                        response.addFile(new FileInfo().setPath(filePath).setFilename(file).setSizeInBytes(objectSummary.getSize()));
+                        fileListResponse.addFile(new FileInfo().setPath(filePath).setFilename(file).setSizeInBytes(s3Object.size()));
                     }
                 }
-                listObjectsRequest.setMarker(objectListing.getNextMarker());
-            } catch (SdkClientException e) {
-                throw new IllegalStateException("Error in listing files from folder :: " + folder, e);
-            }
-        } while (objectListing.isTruncated());
 
-        if (objectListing != null) response.setNextMarker(objectListing.getNextMarker());
-        return response;
-    }
+                continuationToken = listObjectsResponse.nextContinuationToken();
+            } while (listObjectsResponse.isTruncated());
 
-//    @Override
-    public void streamFilesList(String bucket, String prefix, String marker, int filecount, FileListProcessor listProcessor) {
+            fileListResponse.setNextMarker(continuationToken);
+            return fileListResponse;
 
-        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-                .withBucketName(bucket).withPrefix(prefix).withMaxKeys(filecount);
-        if (marker != null) {
-            listObjectsRequest.setMarker(marker);
+        } catch (SdkException e) {
+            throw new IllegalStateException("Error in listing files from folder :: " + folder, e);
         }
+    }
 
-        boolean continueProcessing = true;
-        ObjectListing objectListing;
-        do {
-            try {
-                objectListing = s3ClientManager.getS3Client().listObjects(listObjectsRequest);
-                FileListResponse response = new FileListResponse();
+    //@Override
+    public void streamFilesList(String bucket, String prefix, String continuationToken, int filecount, FileListProcessor listProcessor) {
+        try {
+            ListObjectsV2Request.Builder requestBuilder = ListObjectsV2Request.builder()
+                    .bucket(bucket)
+                    .prefix(prefix)
+                    .maxKeys(filecount);
+
+            if (continuationToken != null) {
+                requestBuilder.continuationToken(continuationToken);
+            }
+
+            boolean continueProcessing = true;
+            String nextToken = continuationToken;
+
+            while (continueProcessing) {
+                ListObjectsV2Request request = requestBuilder.build();
+                if (nextToken != null) {
+                    request = request.toBuilder().continuationToken(nextToken).build();
+                }
+
+                ListObjectsV2Response listObjectsResponse = s3ClientManager.getS3Client().listObjectsV2(request);
+                FileListResponse fileListResponse = new FileListResponse();
                 String file;
                 String filePath;
-                for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-                    if (objectSummary.getSize() != 0) {
-                        int lastSlash = objectSummary.getKey().lastIndexOf('/');
+
+                for (S3Object s3Object : listObjectsResponse.contents()) {
+                    if (s3Object.size() != 0) {
+                        int lastSlash = s3Object.key().lastIndexOf('/');
                         if (lastSlash > 0) {
-                            file = objectSummary.getKey().substring(lastSlash + 1);
-                            filePath = objectSummary.getBucketName() + "/" + objectSummary.getKey().substring(0, lastSlash);
+                            file = s3Object.key().substring(lastSlash + 1);
+                            filePath = bucket + "/" + s3Object.key().substring(0, lastSlash);
                         } else {
-                            file = objectSummary.getKey();
-                            filePath = objectSummary.getBucketName();
+                            file = s3Object.key();
+                            filePath = bucket;
                         }
 
-                        response.addFile(new FileInfo().setPath(filePath).setFilename(file).setSizeInBytes(objectSummary.getSize()));
+                        fileListResponse.addFile(new FileInfo().setPath(filePath).setFilename(file).setSizeInBytes(s3Object.size()));
                     }
                 }
 
-                String nextMarker = objectListing.getNextMarker();
-                response.setMoreFiles(nextMarker != null);
-                if (nextMarker == null) nextMarker = response.prepareNextMarker(); // s3 returns null in the marker if there are no files to get again
-                if (nextMarker == null) nextMarker = objectListing.getMarker(); // use the previous marker if there is no new marker
-                response.setNextMarker(nextMarker);
-                listObjectsRequest.setMarker(nextMarker);
-                continueProcessing = listProcessor.processList(response);
-            } catch (SdkClientException e) {
-                throw new IllegalStateException("Error in listing files from folder :: " + bucket + "/" + prefix, e);
+                nextToken = listObjectsResponse.nextContinuationToken();
+                fileListResponse.setMoreFiles(nextToken != null);
+                if (nextToken == null)
+                    nextToken = fileListResponse.prepareNextMarker(); // s3 returns null in the token if there are no files to get again
+                if (nextToken == null && request.continuationToken() != null)
+                    nextToken = request.continuationToken(); // use the previous token if there is no new token
+                fileListResponse.setNextMarker(nextToken);
+
+                continueProcessing = listProcessor.processList(fileListResponse);
+
+                if (!continueProcessing || nextToken == null) {
+                    break;
+                }
             }
-        } while (continueProcessing);
+        } catch (SdkException e) {
+            throw new IllegalStateException("Error in listing files from folder :: " + bucket + "/" + prefix, e);
+        }
     }
 
-//    @Override
+    @Override
     public FileTransferResponse upload(FileTransferRequest transferRequest) {
-
         String bucket;
         String key;
+
         try {
             int firstSlash = transferRequest.getTargetPath().indexOf('/');
             int lastSlash = transferRequest.getSourcePath().lastIndexOf('/');
+
             if (firstSlash > 0) {
                 bucket = transferRequest.getTargetPath().substring(0, firstSlash);
                 key = transferRequest.getTargetPath().substring(firstSlash + 1) + "/" + transferRequest.getSourcePath().substring(lastSlash + 1);
-
             } else {
                 bucket = transferRequest.getTargetPath();
                 key = transferRequest.getSourcePath().substring(lastSlash + 1);
             }
-            PutObjectRequest request = new PutObjectRequest(bucket, key, new File(transferRequest.getSourcePath()));
 
-            s3ClientManager.getS3Client().putObject(request);
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(bucket).key(key).build();
+
+            s3ClientManager.getS3Client().putObject(putObjectRequest,
+                    software.amazon.awssdk.core.sync.RequestBody.fromFile(new File(transferRequest.getSourcePath())));
+
             FileTransferResponse response = new FileTransferResponse();
             response.setRequest(transferRequest);
             return response;
 
-        } catch (SdkClientException e) {
+        } catch (SdkException e) {
             throw new IllegalStateException("Error in uploading file :: " + transferRequest, e);
         }
     }
 
     @Override
     public FileTransferResponse download(FileTransferRequest request) {
-
         try {
             int firstSlash = request.getSourcePath().indexOf('/');
             int lastSlashLocalFilePath = request.getTargetPath().lastIndexOf('/');
@@ -173,28 +207,51 @@ public class S3FileStore implements FileStore {
             } catch (IOException e) {
                 // Nothing to do
             }
-            ObjectMetadata object = s3ClientManager.getS3Client().getObject(new GetObjectRequest(bucket, key), destinationFile);
+
+            // Create parent directories if they don't exist
+            if (!destinationFile.getParentFile().exists()) {
+                destinationFile.getParentFile().mkdirs();
+            }
+
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+
+            ResponseInputStream<GetObjectResponse> s3ObjectResponse =
+                    s3ClientManager.getS3Client().getObject(getObjectRequest);
+
+            long contentLength = 0;
+            try (OutputStream outputStream = new FileOutputStream(destinationFile)) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = s3ObjectResponse.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                    contentLength += bytesRead;
+                }
+            }
 
             FileTransferResponse transferResponse = new FileTransferResponse();
-            transferResponse.setFileInfo(new FileInfo().setFilename(destinationFile.getName()).setPath(filePath)
-                    .setSizeInBytes(object.getContentLength()));
+            transferResponse.setFileInfo(new FileInfo()
+                    .setFilename(destinationFile.getName())
+                    .setPath(filePath)
+                    .setSizeInBytes(contentLength));
             transferResponse.setRequest(request);
             transferResponse.setExists(true);
             return transferResponse;
-        } catch (AmazonS3Exception e) {
-            if (e.getMessage().startsWith("The specified key does not exist")) {
-                FileTransferResponse transferResponse = new FileTransferResponse();
-                transferResponse.setRequest(request);
-                transferResponse.setExists(false);
-                return transferResponse;
-            }
+
+        } catch (NoSuchKeyException e) {
+            FileTransferResponse transferResponse = new FileTransferResponse();
+            transferResponse.setRequest(request);
+            transferResponse.setExists(false);
+            return transferResponse;
+        } catch (SdkException | IOException e) {
             throw new IllegalStateException("Error in downloading file :: " + request, e);
         }
     }
 
-//    @Override
+    //@Override
     public FileTransferResponse copy(FileTransferRequest request) {
-
         try {
             int sourceFirstSlash = request.getSourcePath().indexOf('/');
             String sourceBucket = request.getSourcePath().substring(0, sourceFirstSlash);
@@ -204,25 +261,31 @@ public class S3FileStore implements FileStore {
             String targetBucket = request.getTargetPath().substring(0, targetFirstSlash);
             String targetKey = request.getTargetPath().substring(targetFirstSlash + 1);
 
-            CopyObjectRequest copyRequest = new CopyObjectRequest(sourceBucket, sourceKey, targetBucket, targetKey);
-            CopyObjectResult copyResult = s3ClientManager.getS3Client().copyObject(copyRequest);
+            CopyObjectRequest copyRequest = CopyObjectRequest.builder()
+                    .sourceBucket(sourceBucket)
+                    .sourceKey(sourceKey)
+                    .destinationBucket(targetBucket)
+                    .destinationKey(targetKey)
+                    .build();
+
+            CopyObjectResponse copyResult = s3ClientManager.getS3Client().copyObject(copyRequest);
 
             FileTransferResponse transferResponse = new FileTransferResponse();
             transferResponse.setRequest(request);
             return transferResponse;
-        } catch (SdkClientException e) {
+
+        } catch (SdkException e) {
             throw new IllegalStateException("Error in copying file :: " + request, e);
         }
     }
 
-//    @Override
+    //@Override
     public boolean createFolder(String path) {
         // Nothing to do for S3
         return true;
     }
 
     public String getS3FileContent(String remoteFilepath) {
-
         try {
             String localFile = s3Config.getWorkFolder() + "/" + UUID.randomUUID();
             FileTransferResponse fileDownloadResponse = download(new FileTransferRequest().setSourcePath(remoteFilepath).setTargetPath(localFile));
@@ -241,7 +304,6 @@ public class S3FileStore implements FileStore {
     }
 
     public File getS3File(String remoteFilepath) {
-
         try {
             String localFile = s3Config.getWorkFolder() + "/" + UUID.randomUUID();
             FileTransferResponse fileDownloadResponse = download(new FileTransferRequest().setSourcePath(remoteFilepath).setTargetPath(localFile));
@@ -253,17 +315,33 @@ public class S3FileStore implements FileStore {
             }
             return null;
         } catch (Exception e) {
-            throw new RuntimeException("Uanble to download file from :: " + remoteFilepath, e );
+            throw new RuntimeException("Unable to download file from :: " + remoteFilepath, e);
         }
     }
 
     public void moveFile(String sourceBucket, String sourceKey, String destinationBucket, String destinationKey) {
-
         try {
-            CopyObjectResult result = s3ClientManager.getS3Client().copyObject(sourceBucket, sourceKey, destinationBucket, destinationKey);
-            s3ClientManager.getS3Client().deleteObject(sourceBucket, sourceKey);
-        } catch (SdkClientException e) {
-            throw new RuntimeException(e);
+            // First copy the object
+            CopyObjectRequest copyRequest = CopyObjectRequest.builder()
+                    .sourceBucket(sourceBucket)
+                    .sourceKey(sourceKey)
+                    .destinationBucket(destinationBucket)
+                    .destinationKey(destinationKey)
+                    .build();
+
+            s3ClientManager.getS3Client().copyObject(copyRequest);
+
+            // Then delete the original
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                    .bucket(sourceBucket)
+                    .key(sourceKey)
+                    .build();
+
+            s3ClientManager.getS3Client().deleteObject(deleteRequest);
+
+        } catch (SdkException e) {
+            throw new RuntimeException("Error moving file from " + sourceBucket + "/" + sourceKey +
+                    " to " + destinationBucket + "/" + destinationKey, e);
         }
     }
 }
