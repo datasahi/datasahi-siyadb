@@ -1,7 +1,7 @@
 plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("io.micronaut.application") version "4.4.4"
-    id("io.micronaut.aot") version "4.4.4"
+    id("io.micronaut.application") version "4.5.3"
+    id("io.micronaut.aot") version "4.5.3"
 }
 
 version = applicationVersion
@@ -26,10 +26,9 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.duckdb:duckdb_jdbc:1.2.2.0")
 
-    implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.1000')
-    implementation platform('software.amazon.awssdk:bom:2.17.132')
-    implementation("com.amazonaws:aws-java-sdk-s3")
-    implementation("software.amazon.awssdk:sts")
+    runtimeOnly("software.amazon.awssdk:bom:2.31.55")
+    implementation("software.amazon.awssdk:s3:2.31.55")
+    implementation("software.amazon.awssdk:sts:2.31.55")
 
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("org.yaml:snakeyaml")

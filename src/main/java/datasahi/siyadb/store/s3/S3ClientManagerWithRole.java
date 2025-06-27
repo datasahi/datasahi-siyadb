@@ -1,21 +1,21 @@
 package datasahi.siyadb.store.s3;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import datasahi.siyadb.common.file.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sts.StsClient;
+import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider;
 import software.amazon.awssdk.services.sts.model.*;
 
 public class S3ClientManagerWithRole implements S3ClientManager {
 
     private static final Logger log = LoggerFactory.getLogger(S3ClientManagerWithRole.class);
-    private AmazonS3 s3Client;
+
+    private S3Client s3Client;
     private S3Config s3Config;
 
     private long clientCreatedAt;
@@ -29,22 +29,7 @@ public class S3ClientManagerWithRole implements S3ClientManager {
     }
 
     @Override
-    public AmazonS3 getS3Client() {
-
-        String roleArn = System.getenv("AWS_ROLE_ARN");
-        if (roleArn == null || roleArn.isEmpty()) {
-            roleArn = s3Config.getRoleArn();
-        }
-
-        String sessionName = System.getenv("AWS_ROLE_SESSION_NAME");
-        if (sessionName == null || sessionName.isEmpty()) {
-            sessionName = "default_session";
-        }
-
-        return getS3Client(roleArn, sessionName);
-    }
-
-    private AmazonS3 getS3Client(String roleArn, String roleSessionName) {
+    public S3Client getS3Client() {
 
         synchronized (this) {
             if ((System.currentTimeMillis() - clientCreatedAt) >= expiryMillisForClient) {
@@ -64,46 +49,47 @@ public class S3ClientManagerWithRole implements S3ClientManager {
                 }
             }
 
-            return getAmazonS3ClientForRoleArn(roleArn, roleSessionName, tokenData);
+            this.s3Client = getAmazonS3ClientForRoleArn(tokenData);
+            return s3Client;
         }
     }
 
-    private synchronized AmazonS3 getAmazonS3ClientForRoleArn(String roleArn, String roleSessionName,
-                                                              String tokenData) {
+    private synchronized S3Client getAmazonS3ClientForRoleArn(String tokenData) {
 
         if (s3Client != null) {
             return s3Client;
         }
+
         try {
             StsClient stsClient = StsClient.builder()
-                    .region(Region.AWS_GLOBAL)
+                    .region(Region.of(s3Config.getRegion()))
+                    .credentialsProvider(DefaultCredentialsProvider.create())
                     .build();
 
-            Credentials credentials = null;
+            AssumeRoleRequest.Builder assumeRoleRequestBuilder = AssumeRoleRequest.builder()
+                    .roleArn(s3Config.getRoleArn())
+                    .roleSessionName("S3FileStoreSession");
             if (tokenData != null && !tokenData.isEmpty()) {
-                credentials = assumeWebIdentity(stsClient, roleArn, roleSessionName, tokenData);
-            } else {
-                credentials = assumeGivenRole(stsClient, roleArn, roleSessionName);
+                assumeRoleRequestBuilder.tokenCode(tokenData);
             }
+            AssumeRoleRequest assumeRoleRequest = assumeRoleRequestBuilder
+                    .build();
 
-            if (credentials == null) {
-                throw new RuntimeException("Unable to get aws credentials");
-            }
+            AwsCredentialsProvider credentialsProvider = StsAssumeRoleCredentialsProvider.builder()
+                    .stsClient(stsClient)
+                    .refreshRequest(assumeRoleRequest)
+                    .build();
 
-            BasicSessionCredentials awsCredentials = new BasicSessionCredentials(
-                    credentials.accessKeyId(),
-                    credentials.secretAccessKey(),
-                    credentials.sessionToken());
 
-            this.s3Client = AmazonS3ClientBuilder.standard()
-                    .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
-                    .withRegion(s3Config.getRegion())
+            S3Client s3Client = S3Client.builder()
+                    .region(Region.of(s3Config.getRegion()))
+                    .credentialsProvider(credentialsProvider)
                     .build();
             this.clientCreatedAt = System.currentTimeMillis();
             return s3Client;
-        } catch (AmazonServiceException e) {
+        } catch (Exception e) {
             this.s3Client = null;
-            throw new IllegalStateException("Could not prepare S3 client for role :: " + roleArn, e);
+            throw new IllegalStateException("Could not prepare S3 client for role :: " + s3Config.getRoleArn(), e);
         }
     }
 

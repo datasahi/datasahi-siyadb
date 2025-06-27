@@ -44,7 +44,7 @@ public class StoreRegistry {
     public void register(JSONObject dsJson) {
 
         String type = dsJson.getString("type");
-        switch (FileStoreType.valueOf(type)) {
+        switch (StoreType.valueOf(type)) {
             case S3:
                 S3Config s3Config = gson.fromJson(dsJson.toString(), S3Config.class);
                 s3Config.setWorkFolder(configService.getWorkDir() + "/" + s3Config.getId());

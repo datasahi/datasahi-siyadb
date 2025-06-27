@@ -1,7 +1,7 @@
 package datasahi.siyadb.store.s3;
 
-import com.amazonaws.services.s3.AmazonS3;
+import software.amazon.awssdk.services.s3.S3Client;
 
 public interface S3ClientManager {
-    AmazonS3 getS3Client();
+    S3Client getS3Client();
 }

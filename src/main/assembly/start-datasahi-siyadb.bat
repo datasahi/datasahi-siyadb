@@ -5,7 +5,7 @@ rem Set environment variables with defaults
 if not defined DATASAHI_PORT set DATASAHI_PORT=8080
 if not defined DATASAHI_CONFIG_PATHS set DATASAHI_CONFIG_PATHS=config
 if not defined DATASAHI_WORK_DIR set DATASAHI_WORK_DIR=work
-if not defined APP_VERSION set APP_VERSION=0.1.2
+if not defined APP_VERSION set APP_VERSION=0.1.3
 set AWS_JAVA_V1_DISABLE_DEPRECATION_ANNOUNCEMENT=true
 
 rem Create logs directory if it doesn't exist

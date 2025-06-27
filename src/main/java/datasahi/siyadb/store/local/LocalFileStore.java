@@ -1,9 +1,6 @@
 package datasahi.siyadb.store.local;
 
-import datasahi.siyadb.store.FileStore;
-import datasahi.siyadb.store.FileTransferRequest;
-import datasahi.siyadb.store.FileTransferResponse;
-import datasahi.siyadb.store.StoreConfig;
+import datasahi.siyadb.store.*;
 
 public class LocalFileStore implements FileStore {
 
@@ -20,6 +17,16 @@ public class LocalFileStore implements FileStore {
 
     @Override
     public FileTransferResponse download(FileTransferRequest request) {
+        return null;
+    }
+
+    @Override
+    public FileTransferResponse upload(FileTransferRequest transferRequest) {
+        return null;
+    }
+
+    @Override
+    public FileListResponse listFiles(String folder) {
         return null;
     }
 }
