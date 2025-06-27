@@ -4,7 +4,7 @@
 export DATASAHI_PORT=${DATASAHI_PORT:-8080}  # Default to 8080 if not set
 export DATASAHI_CONFIG_PATHS=${DATASAHI_CONFIG_PATHS:-"config"}  # Default to "config" if not set
 export DATASAHI_WORK_DIR=${DATASAHI_WORK_DIR:-"work"}  # Default to "work" if not set
-export APP_VERSION=${APP_VERSION:-"0.1.2"}  # Default to 0.1.2 if not set
+export APP_VERSION=${APP_VERSION:-"0.1.3"}
 export AWS_JAVA_V1_DISABLE_DEPRECATION_ANNOUNCEMENT="true"  # Suppress AWS SDK v1 deprecation warnings
 
 # Create logs directory if it doesn't exist
