@@ -63,7 +63,8 @@ start_server() {
     echo "Health check to see all datastores are setup: http://localhost:$DATASAHI_PORT/health/check"
 
     # Start the server and redirect output to log file
-    java $JAVA_OPTS -jar "$jar_file" > "$log_file" 2>&1
+#    java $JAVA_OPTS -jar "$jar_file" > "$log_file" 2>&1
+    java $JAVA_OPTS -jar "$jar_file"
 }
 
 # Main execution
