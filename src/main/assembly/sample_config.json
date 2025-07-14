@@ -1,15 +1,44 @@
 {
   "datastores": [
     {
-      "id": "ecom",
+      "id": "store1",
       "type": "S3",
-      "name": "S3 for Ecommerce",
-      "accessKey": "AKIAIOSFODNN7EXAMPLE",
-      "secretKey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+      "name": "Store 1 - Standard AWS",
+      "securityMode": "ACCESS_KEY",
+      "accessKey": "AWS_ACCESS_KEY",
+      "secretKey": "AWS_SECRET_KEY",
+      "region": "us-east-1",
+      "cachedMinutes": 1,
+      "testFile": "ecomb/holdings.csv",
+      "enabled": true
+    },
+    {
+      "id": "store2",
+      "type": "S3",
+      "name": "Store 2 - AWS Role ARN",
+      "securityMode": "ROLE_ARN",
+      "roleArn": "IamRoleName",
+      "region": "us-east-1",
+      "refreshClientInSeconds": 240,
+      "cachedMinutes": 1,
+      "testFile": "ecomb/holdings.csv",
+      "enabled": true
+    },
+    {
+      "id": "store3",
+      "type": "S3",
+      "name": "Store 3 - S3 compatible store, digitalocean",
+      "securityMode": "ACCESS_KEY",
+      "accessKey": "DO_ACCESS_KEY",
+      "secretKey": "DO_SECRET_KEY",
       "region": "us-east-1",
       "endpointUrl": "http://localhost:9444",
+      "signPayload": true,
+      "https": true,
+      "pathStyleAccess": true,
       "cachedMinutes": 1,
-      "testFile": "cspdata/holdings.csv"
+      "testFile": "ecomb/holdings.csv",
+      "enabled": true
     }
   ],
   "datasets": [
@@ -17,8 +46,10 @@
       "id": "ecom-orders",
       "datastore": "ecom",
       "name": "Customer Orders",
-      "filePattern": "^cspdata/\\d{8}\\.CSV$",
-      "indices": ["TransactionNumber, Type", "Uumid"]
+      "filePattern": "^ecomb/\\d{8}\\.csv$",
+      "filePattern1": "^cspdata/\\d{8}\\.CSV$",
+      "indices": ["Instrument"],
+      "indices1": ["TransactionNumber, Type", "Uumid"]
     }
   ]
 }

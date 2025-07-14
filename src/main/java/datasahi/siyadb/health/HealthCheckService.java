@@ -31,7 +31,7 @@ public class HealthCheckService {
             log.info("Performing health check for {}", fs.getConfig().getId());
             switch (fs.getConfig().getType()) {
                 case S3:
-                    healthSummary.add(new S3Healthcheck((S3FileStore) fs, configService.getWorkDir()).check());
+                    healthSummary.add(new S3Healthcheck((S3FileStore) fs, configService.getTempFilesFolder()).check());
                     break;
                 default:
                     healthSummary.add(new HealthResponse().setDataserverId(fs.getConfig().getId()).setHealthy(false)

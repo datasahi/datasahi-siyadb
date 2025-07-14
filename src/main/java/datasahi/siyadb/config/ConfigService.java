@@ -33,8 +33,8 @@ public class ConfigService {
         return configPaths;
     }
 
-    public String getWorkDir() {
-        return workDir;
+    public String getTempFilesFolder() {
+        return workDir + "/__files";
     }
 
     public int getCleanupSeconds() {
@@ -42,7 +42,7 @@ public class ConfigService {
     }
 
     public String getDataDir() {
-        String dataDir = workDir + "/data";
+        String dataDir = workDir + "/__data";
         LOGGER.info("dataDir :: " + dataDir);
         try {
             File file = new File(dataDir);

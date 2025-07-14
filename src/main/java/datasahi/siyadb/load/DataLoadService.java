@@ -70,7 +70,7 @@ public class DataLoadService {
 
         FileKey fileKey = fileState.getFileKey();
         String sourcePath = fileKey.getSourcePath();
-        String targetPath = configService.getWorkDir() + "/" + sourcePath;
+        String targetPath = configService.getTempFilesFolder() + "/" + sourcePath;
         fileState.setLocalPath(targetPath);
         FileTransferRequest request = new FileTransferRequest().setSourcePath(sourcePath)
                 .setTargetPath(targetPath);
