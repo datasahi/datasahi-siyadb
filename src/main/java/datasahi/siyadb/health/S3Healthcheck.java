@@ -23,7 +23,7 @@ public class S3Healthcheck implements Healthcheck {
     public HealthResponse check() {
 
         String filepath = s3FileStore.getS3Config().getTestFile();
-        FileTransferRequest request = new FileTransferRequest().setTargetPath(workFolder + filepath)
+        FileTransferRequest request = new FileTransferRequest().setTargetPath(workFolder + "/" + filepath)
                 .setSourcePath(filepath);
         String id = s3FileStore.getConfig().getId();
         try {

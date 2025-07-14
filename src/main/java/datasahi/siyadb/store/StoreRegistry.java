@@ -11,6 +11,8 @@ import io.micronaut.context.annotation.Context;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 @Context
 public class StoreRegistry {
+
+    private static final Logger log = LoggerFactory.getLogger(StoreRegistry.class);
 
     private final ConfigService configService;
     private final ServerConfiguration serverConfiguration;
@@ -47,7 +51,8 @@ public class StoreRegistry {
         switch (StoreType.valueOf(type)) {
             case S3:
                 S3Config s3Config = gson.fromJson(dsJson.toString(), S3Config.class);
-                s3Config.setWorkFolder(configService.getWorkDir() + "/" + s3Config.getId());
+                s3Config.setWorkFolder(configService.getTempFilesFolder() + "/__" + s3Config.getId());
+                log.info("s3Config :: " + s3Config);
                 register(new S3FileStore(s3Config));
                 break;
             case LOCAL:
